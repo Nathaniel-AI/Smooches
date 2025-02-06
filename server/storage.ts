@@ -29,6 +29,9 @@ import {
   type InsertTransaction,
   type InsertSubscription,
   type InsertEarnings,
+  type PodcastClip,
+  type InsertPodcastClip,
+  podcastClips
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
@@ -82,6 +85,12 @@ export interface IStorage {
   // Earnings
   getEarnings(userId: number, month?: string): Promise<Earnings[]>;
   createEarnings(earnings: InsertEarnings): Promise<Earnings>;
+
+  // Podcast Clips
+  createPodcastClip(clip: InsertPodcastClip): Promise<PodcastClip>;
+  getPodcastClip(id: number): Promise<PodcastClip | undefined>;
+  getVideoPodcastClips(videoId: number): Promise<PodcastClip[]>;
+  getUserPodcastClips(userId: number): Promise<PodcastClip[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -363,6 +372,36 @@ export class DatabaseStorage implements IStorage {
       .values(earning)
       .returning();
     return newEarning;
+  }
+
+  async createPodcastClip(insertClip: InsertPodcastClip): Promise<PodcastClip> {
+    const [clip] = await db
+      .insert(podcastClips)
+      .values(insertClip)
+      .returning();
+    return clip;
+  }
+
+  async getPodcastClip(id: number): Promise<PodcastClip | undefined> {
+    const [clip] = await db
+      .select()
+      .from(podcastClips)
+      .where(eq(podcastClips.id, id));
+    return clip;
+  }
+
+  async getVideoPodcastClips(videoId: number): Promise<PodcastClip[]> {
+    return await db
+      .select()
+      .from(podcastClips)
+      .where(eq(podcastClips.videoId, videoId));
+  }
+
+  async getUserPodcastClips(userId: number): Promise<PodcastClip[]> {
+    return await db
+      .select()
+      .from(podcastClips)
+      .where(eq(podcastClips.userId, userId));
   }
 }
 

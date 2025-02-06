@@ -103,6 +103,17 @@ export const earnings = pgTable("earnings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const podcastClips = pgTable("podcast_clips", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  videoId: integer("video_id").references(() => videos.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  startTime: integer("start_time").notNull(), // in seconds
+  endTime: integer("end_time").notNull(), // in seconds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -181,6 +192,15 @@ export const insertEarningsSchema = createInsertSchema(earnings).pick({
   month: true,
 });
 
+export const insertPodcastClipSchema = createInsertSchema(podcastClips).pick({
+  userId: true,
+  videoId: true,
+  title: true,
+  description: true,
+  startTime: true,
+  endTime: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
@@ -191,6 +211,7 @@ export type InsertReaction = z.infer<typeof insertReactionSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type InsertEarnings = z.infer<typeof insertEarningsSchema>;
+export type InsertPodcastClip = z.infer<typeof insertPodcastClipSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Video = typeof videos.$inferSelect;
@@ -202,3 +223,4 @@ export type Reaction = typeof reactions.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Earnings = typeof earnings.$inferSelect;
+export type PodcastClip = typeof podcastClips.$inferSelect;

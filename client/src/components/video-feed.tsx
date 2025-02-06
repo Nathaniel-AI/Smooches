@@ -30,7 +30,7 @@ export function VideoFeed() {
           <div className="w-full max-w-md relative">
             <VideoPlayer video={video} autoPlay={index === 0} />
             <div className="absolute bottom-4 left-4 right-12">
-              <UserProfile userId={video.userId} />
+              {video.userId && <UserProfile userId={video.userId} />}
               <p className="text-white text-sm mt-2">{video.description}</p>
             </div>
             <div className="absolute right-4 bottom-4 flex flex-col items-center gap-4">
