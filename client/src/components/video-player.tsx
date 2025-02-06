@@ -4,6 +4,7 @@ import { type Video } from "@shared/schema";
 import { EmojiReactions } from "./emoji-reactions";
 import { ClipCreator } from "./clip-creator";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface VideoPlayerProps {
   video: Video;
@@ -33,7 +34,10 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
       const handleLoadedData = () => {
         setIsLoading(false);
         if (autoPlay) {
-          video.play().catch(console.error);
+          video.play().catch(() => {
+            console.error('Failed to autoplay video');
+            setIsPlaying(false);
+          });
           setIsPlaying(true);
         }
       };
@@ -49,20 +53,26 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
       video.addEventListener('error', handleError);
 
       return () => {
+        if (!video.paused) {
+          video.pause();
+        }
         video.removeEventListener('timeupdate', handleTimeUpdate);
         video.removeEventListener('loadstart', handleLoadStart);
         video.removeEventListener('loadeddata', handleLoadedData);
         video.removeEventListener('error', handleError);
       };
     }
-  }, [autoPlay]);
+  }, [autoPlay, video.videoUrl]);
 
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play().catch(console.error);
+        videoRef.current.play().catch(() => {
+          setError("Failed to play video");
+          setIsPlaying(false);
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -71,6 +81,14 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
   const handleSeek = (time: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = time;
+    }
+  };
+
+  const handleRetry = () => {
+    if (videoRef.current) {
+      setError(null);
+      setIsLoading(true);
+      videoRef.current.load();
     }
   };
 
@@ -97,7 +115,12 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
         {/* Error state */}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <p className="text-white text-center px-4">{error}</p>
+            <div className="text-center space-y-4">
+              <p className="text-white px-4">{error}</p>
+              <Button variant="secondary" onClick={handleRetry}>
+                Retry
+              </Button>
+            </div>
           </div>
         )}
 
