@@ -23,79 +23,43 @@ const reactionClients = new Map<string, Set<WebSocket>>();
 // Initialize mock data
 async function initializeMockData() {
   try {
-    console.log('Initializing mock data...');
-
     // Add mock users if they don't exist
     for (const user of mockUsers) {
-      console.log(`Checking user ${user.username}...`);
       const existingUser = await storage.getUserByUsername(user.username);
       if (!existingUser) {
-        console.log(`Creating user ${user.username}...`);
         await storage.createUser({
           username: user.username,
           password: "password123",
           displayName: user.displayName,
           avatar: user.avatar,
-          bio: user.bio || "",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          bio: user.bio
         });
-        // Wait a bit between user creations to ensure order
-        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-
-    // Wait for users to be fully created
-    console.log('Waiting for users to be created...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Verify users exist before proceeding
-    for (const user of mockUsers) {
-      const existingUser = await storage.getUserByUsername(user.username);
-      if (!existingUser) {
-        throw new Error(`Failed to create user ${user.username}`);
-      }
-    }
-
-    console.log('Users verified, proceeding with videos...');
 
     // Add mock videos
     for (const video of mockVideos) {
       const existingVideos = await storage.getUserVideos(video.userId);
       if (!existingVideos.some(v => v.title === video.title)) {
-        console.log(`Creating video for user ${video.userId}...`);
         await storage.createVideo({
           userId: video.userId,
           title: video.title,
           description: video.description,
           videoUrl: video.videoUrl,
           thumbnail: video.thumbnail,
-          isLive: video.isLive,
-          createdAt: video.createdAt.toISOString(),
-          updatedAt: new Date().toISOString()
+          isLive: video.isLive
         });
-        // Wait between video creations
-        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-
-    console.log('Videos created, proceeding with comments...');
 
     // Add mock comments
     for (const comment of mockComments) {
-      const existingComments = await storage.getComments(comment.videoId);
-      if (!existingComments.some(c => c.content === comment.content)) {
-        await storage.createComment({
-          userId: comment.userId,
-          videoId: comment.videoId,
-          content: comment.content,
-          createdAt: comment.createdAt.toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      }
+      await storage.createComment({
+        userId: comment.userId,
+        videoId: comment.videoId,
+        content: comment.content
+      });
     }
-
-    console.log('Mock data initialization complete.');
   } catch (error) {
     console.error('Error initializing mock data:', error);
   }

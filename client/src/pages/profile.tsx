@@ -4,36 +4,21 @@ import { UserProfile } from "@/components/user-profile";
 import { VideoPlayer } from "@/components/video-player";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AchievementsShowcase } from "@/components/achievements/achievements-showcase";
-import type { Video, User } from "@shared/schema";
+import type { Video } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Profile() {
   const [, params] = useRoute("/profile/:id");
   const userId = parseInt(params?.id || "0");
 
-  const { data: user } = useQuery<User>({
-    queryKey: [`/api/users/${userId}`],
-  });
-
   const { data: videos, isLoading } = useQuery<Video[]>({
     queryKey: [`/api/users/${userId}/videos`],
   });
 
-  // TODO: Replace with actual stats from API
-  const mockUserStats = {
-    totalVideos: videos?.length || 0,
-    totalStreams: 5,
-    totalReactions: 250,
-    subscriberCount: 15
-  };
-
   return (
     <main className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto py-8 space-y-8">
+      <div className="container max-w-4xl mx-auto py-8">
         <UserProfile userId={userId} detailed />
-
-        {user && <AchievementsShowcase user={user} userStats={mockUserStats} />}
 
         <Tabs defaultValue="videos" className="mt-8">
           <TabsList>
