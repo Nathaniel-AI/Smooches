@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
@@ -8,6 +9,9 @@ import {
   insertFollowSchema 
 } from "@shared/schema";
 import { mockUsers, mockVideos, mockComments } from "../client/src/lib/mock-data";
+
+// Keep track of connected clients for each live stream
+const streamClients = new Map<number, Set<WebSocket>>();
 
 // Initialize mock data
 async function initializeMockData() {
@@ -47,6 +51,64 @@ async function initializeMockData() {
 export function registerRoutes(app: Express): Server {
   // Initialize mock data when server starts
   initializeMockData().catch(console.error);
+
+  const httpServer = createServer(app);
+
+  // Create WebSocket server
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'
+  });
+
+  wss.on('connection', (ws) => {
+    let streamId: number | null = null;
+
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+
+        switch (message.type) {
+          case 'join':
+            streamId = message.streamId;
+            if (!streamClients.has(streamId)) {
+              streamClients.set(streamId, new Set());
+            }
+            streamClients.get(streamId)?.add(ws);
+            break;
+
+          case 'chat':
+            if (streamId && streamClients.has(streamId)) {
+              const chatMessage = {
+                type: 'chat',
+                userId: message.userId,
+                username: message.username,
+                content: message.content,
+                timestamp: new Date().toISOString()
+              };
+
+              // Broadcast to all clients in this stream
+              streamClients.get(streamId)?.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify(chatMessage));
+                }
+              });
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (streamId && streamClients.has(streamId)) {
+        streamClients.get(streamId)?.delete(ws);
+        if (streamClients.get(streamId)?.size === 0) {
+          streamClients.delete(streamId);
+        }
+      }
+    });
+  });
 
   // Users
   app.get("/api/users/:id", async (req, res) => {
@@ -137,6 +199,6 @@ export function registerRoutes(app: Express): Server {
     res.json(following);
   });
 
-  const httpServer = createServer(app);
+
   return httpServer;
 }
