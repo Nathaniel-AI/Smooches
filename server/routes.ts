@@ -6,7 +6,9 @@ import {
   insertUserSchema, 
   insertVideoSchema, 
   insertCommentSchema,
-  insertFollowSchema 
+  insertFollowSchema,
+  insertRadioStationSchema,
+  insertRadioScheduleSchema
 } from "@shared/schema";
 import { mockUsers, mockVideos, mockComments } from "../client/src/lib/mock-data";
 
@@ -197,6 +199,52 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/users/:id/following", async (req, res) => {
     const following = await storage.getFollowing(parseInt(req.params.id));
     res.json(following);
+  });
+
+  // Radio Stations
+  app.get("/api/radio-stations", async (_req, res) => {
+    const stations = await storage.getRadioStations();
+    res.json(stations);
+  });
+
+  app.get("/api/radio-stations/:id", async (req, res) => {
+    const station = await storage.getRadioStation(parseInt(req.params.id));
+    if (!station) {
+      return res.status(404).json({ message: "Radio station not found" });
+    }
+    res.json(station);
+  });
+
+  app.post("/api/radio-stations", async (req, res) => {
+    const result = insertRadioStationSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid radio station data" });
+    }
+    const station = await storage.createRadioStation(result.data);
+    res.json(station);
+  });
+
+  // Radio Schedules
+  app.get("/api/radio-stations/:id/schedule", async (req, res) => {
+    const schedules = await storage.getStationSchedules(parseInt(req.params.id));
+    res.json(schedules);
+  });
+
+  app.get("/api/radio-stations/:id/current-show", async (req, res) => {
+    const show = await storage.getCurrentSchedule(parseInt(req.params.id));
+    if (!show) {
+      return res.status(404).json({ message: "No show currently playing" });
+    }
+    res.json(show);
+  });
+
+  app.post("/api/radio-schedules", async (req, res) => {
+    const result = insertRadioScheduleSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid schedule data" });
+    }
+    const schedule = await storage.createRadioSchedule(result.data);
+    res.json(schedule);
   });
 
 

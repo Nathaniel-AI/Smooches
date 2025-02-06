@@ -41,6 +41,29 @@ export const follows = pgTable("follows", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const radioStations = pgTable("radio_stations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  streamUrl: text("stream_url").notNull(),
+  coverImage: text("cover_image"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  userId: integer("user_id").references(() => users.id),
+});
+
+export const radioSchedules = pgTable("radio_schedules", {
+  id: serial("id").primaryKey(),
+  stationId: integer("station_id").references(() => radioStations.id),
+  showName: text("show_name").notNull(),
+  description: text("description"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  isRecurring: boolean("is_recurring").default(false),
+  recurringDays: text("recurring_days").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -69,12 +92,35 @@ export const insertFollowSchema = createInsertSchema(follows).pick({
   followingId: true,
 });
 
+export const insertRadioStationSchema = createInsertSchema(radioStations).pick({
+  name: true,
+  description: true,
+  streamUrl: true,
+  coverImage: true,
+  isActive: true,
+  userId: true,
+});
+
+export const insertRadioScheduleSchema = createInsertSchema(radioSchedules).pick({
+  stationId: true,
+  showName: true,
+  description: true,
+  startTime: true,
+  endTime: true,
+  isRecurring: true,
+  recurringDays: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type InsertFollow = z.infer<typeof insertFollowSchema>;
+export type InsertRadioStation = z.infer<typeof insertRadioStationSchema>;
+export type InsertRadioSchedule = z.infer<typeof insertRadioScheduleSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Video = typeof videos.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 export type Follow = typeof follows.$inferSelect;
+export type RadioStation = typeof radioStations.$inferSelect;
+export type RadioSchedule = typeof radioSchedules.$inferSelect;
