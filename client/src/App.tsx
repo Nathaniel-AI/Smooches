@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import Live from "@/pages/live";
 import Radio from "@/pages/radio";
 import MonetizationDashboard from "@/pages/monetization";
 import { Header } from "@/components/header";
+import { OnboardingWizard } from "@/components/onboarding/wizard";
 
 function Navigation() {
   return (
@@ -56,6 +58,12 @@ function Navigation() {
 }
 
 function Router() {
+  const [showOnboarding, setShowOnboarding] = useState(true); // TODO: Check if user is new
+
+  if (showOnboarding) {
+    return <OnboardingWizard onComplete={() => setShowOnboarding(false)} />;
+  }
+
   return (
     <div className="pb-20 pt-16">
       <Header />
