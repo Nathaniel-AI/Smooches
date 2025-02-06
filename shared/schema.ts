@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -68,8 +68,38 @@ export const reactions = pgTable("reactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   emoji: text("emoji").notNull(),
-  targetType: text("target_type").notNull(), 
+  targetType: text("target_type").notNull(),
   targetId: integer("target_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  type: text("type").notNull(), // 'donation', 'subscription', 'tip'
+  status: text("status").notNull(), // 'pending', 'completed', 'failed'
+  fromUserId: integer("from_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  creatorId: integer("creator_id").references(() => users.id),
+  status: text("status").notNull(), // 'active', 'cancelled', 'expired'
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const earnings = pgTable("earnings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  type: text("type").notNull(), // 'subscription', 'donation', 'tip'
+  month: text("month").notNull(), // YYYY-MM format
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -127,6 +157,30 @@ export const insertReactionSchema = createInsertSchema(reactions).pick({
   targetId: true,
 });
 
+export const insertTransactionSchema = createInsertSchema(transactions).pick({
+  userId: true,
+  amount: true,
+  type: true,
+  status: true,
+  fromUserId: true,
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  userId: true,
+  creatorId: true,
+  status: true,
+  amount: true,
+  startDate: true,
+  endDate: true,
+});
+
+export const insertEarningsSchema = createInsertSchema(earnings).pick({
+  userId: true,
+  amount: true,
+  type: true,
+  month: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
@@ -134,6 +188,9 @@ export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type InsertRadioStation = z.infer<typeof insertRadioStationSchema>;
 export type InsertRadioSchedule = z.infer<typeof insertRadioScheduleSchema>;
 export type InsertReaction = z.infer<typeof insertReactionSchema>;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type InsertEarnings = z.infer<typeof insertEarningsSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Video = typeof videos.$inferSelect;
@@ -142,3 +199,6 @@ export type Follow = typeof follows.$inferSelect;
 export type RadioStation = typeof radioStations.$inferSelect;
 export type RadioSchedule = typeof radioSchedules.$inferSelect;
 export type Reaction = typeof reactions.$inferSelect;
+export type Transaction = typeof transactions.$inferSelect;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type Earnings = typeof earnings.$inferSelect;

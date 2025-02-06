@@ -9,7 +9,10 @@ import {
   insertFollowSchema,
   insertRadioStationSchema,
   insertRadioScheduleSchema,
-  insertReactionSchema
+  insertReactionSchema,
+  insertTransactionSchema,
+  insertSubscriptionSchema,
+  insertEarningsSchema
 } from "@shared/schema";
 import { mockUsers, mockVideos, mockComments } from "../client/src/lib/mock-data";
 
@@ -310,6 +313,65 @@ export function registerRoutes(app: Express): Server {
       parseInt(req.params.targetId)
     );
     res.json(reactions);
+  });
+
+  // Transactions
+  app.post("/api/transactions", async (req, res) => {
+    const result = insertTransactionSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid transaction data" });
+    }
+    const transaction = await storage.createTransaction(result.data);
+    res.json(transaction);
+  });
+
+  app.get("/api/transactions", async (_req, res) => {
+    // TODO: Get userId from session
+    const userId = 1; // Mock user ID for now
+    const transactions = await storage.getTransactions(userId);
+    res.json(transactions);
+  });
+
+  // Subscriptions
+  app.post("/api/subscriptions", async (req, res) => {
+    const result = insertSubscriptionSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid subscription data" });
+    }
+    const subscription = await storage.createSubscription(result.data);
+    res.json(subscription);
+  });
+
+  app.get("/api/subscriptions", async (_req, res) => {
+    // TODO: Get userId from session
+    const userId = 1; // Mock user ID for now
+    const subscriptions = await storage.getSubscriptions(userId);
+    res.json(subscriptions);
+  });
+
+  app.get("/api/subscriptions/subscribers", async (_req, res) => {
+    // TODO: Get userId from session
+    const userId = 1; // Mock user ID for now
+    const subscribers = await storage.getSubscribers(userId);
+    res.json(subscribers);
+  });
+
+  // Earnings
+  app.get("/api/earnings", async (req, res) => {
+    // TODO: Get userId from session
+    const userId = 1; // Mock user ID for now
+    const month = req.query.month as string | undefined;
+    const earnings = await storage.getEarnings(userId, month);
+    res.json(earnings);
+  });
+
+  app.post("/api/earnings", async (req, res) => {
+    const result = insertEarningsSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid earnings data" });
+    }
+    const earnings = await storage.createEarnings(result.data);
+    res.json(earnings);
   });
 
   return httpServer;

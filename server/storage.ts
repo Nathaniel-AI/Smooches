@@ -19,7 +19,16 @@ import {
   type InsertReaction,
   radioStations,
   radioSchedules,
-  reactions
+  reactions,
+  transactions,
+  subscriptions,
+  earnings,
+  type Transaction,
+  type Subscription,
+  type Earnings,
+  type InsertTransaction,
+  type InsertSubscription,
+  type InsertEarnings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
@@ -60,6 +69,19 @@ export interface IStorage {
   // Reactions
   createReaction(reaction: InsertReaction): Promise<Reaction>;
   getReactions(targetType: string, targetId: number): Promise<Reaction[]>;
+
+  // Transactions
+  getTransactions(userId: number): Promise<Transaction[]>;
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+
+  // Subscriptions
+  getSubscriptions(userId: number): Promise<Subscription[]>;
+  getSubscribers(creatorId: number): Promise<Subscription[]>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+
+  // Earnings
+  getEarnings(userId: number, month?: string): Promise<Earnings[]>;
+  createEarnings(earnings: InsertEarnings): Promise<Earnings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -278,6 +300,69 @@ export class DatabaseStorage implements IStorage {
           eq(reactions.targetId, targetId)
         )
       );
+  }
+
+  async getTransactions(userId: number): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.userId, userId));
+  }
+
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const [newTransaction] = await db
+      .insert(transactions)
+      .values(transaction)
+      .returning();
+    return newTransaction;
+  }
+
+  async getSubscriptions(userId: number): Promise<Subscription[]> {
+    return await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId));
+  }
+
+  async getSubscribers(creatorId: number): Promise<Subscription[]> {
+    return await db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.creatorId, creatorId),
+          eq(subscriptions.status, 'active')
+        )
+      );
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const [newSubscription] = await db
+      .insert(subscriptions)
+      .values(subscription)
+      .returning();
+    return newSubscription;
+  }
+
+  async getEarnings(userId: number, month?: string): Promise<Earnings[]> {
+    let query = db
+      .select()
+      .from(earnings)
+      .where(eq(earnings.userId, userId));
+
+    if (month) {
+      query = query.where(eq(earnings.month, month));
+    }
+
+    return await query;
+  }
+
+  async createEarnings(earning: InsertEarnings): Promise<Earnings> {
+    const [newEarning] = await db
+      .insert(earnings)
+      .values(earning)
+      .returning();
+    return newEarning;
   }
 }
 
