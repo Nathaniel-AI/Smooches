@@ -3,6 +3,8 @@ import {
   type User, type Video, type Comment, type Follow,
   type InsertUser, type InsertVideo, type InsertComment, type InsertFollow
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -27,178 +29,122 @@ export interface IStorage {
   getFollowing(userId: number): Promise<User[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private videos: Map<number, Video>;
-  private comments: Map<number, Comment>;
-  private follows: Map<number, Follow>;
-  private currentIds: { [key: string]: number };
-
-  constructor() {
-    this.users = new Map();
-    this.videos = new Map();
-    this.comments = new Map();
-    this.follows = new Map();
-    this.currentIds = {
-      users: 1,
-      videos: 1,
-      comments: 1,
-      follows: 1
-    };
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentIds.users++;
-    const user: User = {
-      ...insertUser,
-      id,
-      followers: 0,
-      following: 0,
-      avatar: insertUser.avatar || null,
-      bio: insertUser.bio || null
-    };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getVideo(id: number): Promise<Video | undefined> {
-    return this.videos.get(id);
+    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    return video;
   }
 
   async getVideos(): Promise<Video[]> {
-    return Array.from(this.videos.values());
+    return await db.select().from(videos);
   }
 
   async getUserVideos(userId: number): Promise<Video[]> {
-    return Array.from(this.videos.values()).filter(
-      (video) => video.userId === userId
-    );
+    return await db.select().from(videos).where(eq(videos.userId, userId));
   }
 
   async createVideo(insertVideo: InsertVideo): Promise<Video> {
-    const id = this.currentIds.videos++;
-    const video: Video = {
-      ...insertVideo,
-      id,
-      userId: insertVideo.userId || null,
-      description: insertVideo.description || null,
-      thumbnail: insertVideo.thumbnail || null,
-      likes: 0,
-      comments: 0,
-      isLive: insertVideo.isLive || false,
-      createdAt: new Date()
-    };
-    this.videos.set(id, video);
+    const [video] = await db.insert(videos).values(insertVideo).returning();
     return video;
   }
 
   async getComments(videoId: number): Promise<Comment[]> {
-    return Array.from(this.comments.values()).filter(
-      (comment) => comment.videoId === videoId
-    );
+    return await db.select().from(comments).where(eq(comments.videoId, videoId));
   }
 
   async createComment(insertComment: InsertComment): Promise<Comment> {
-    const id = this.currentIds.comments++;
-    const comment: Comment = {
-      ...insertComment,
-      id,
-      userId: insertComment.userId || null,
-      videoId: insertComment.videoId || null,
-      createdAt: new Date()
-    };
-    this.comments.set(id, comment);
+    const [comment] = await db.insert(comments).values(insertComment).returning();
 
-    if (comment.videoId !== null) {
-      const video = await this.getVideo(comment.videoId);
-      if (video) {
-        video.comments = (video.comments || 0) + 1;
-        this.videos.set(video.id, video);
-      }
+    // Update video comment count
+    if (comment.videoId) {
+      await db.update(videos)
+        .set({ comments: db.select().from(comments)
+          .where(eq(comments.videoId, comment.videoId))
+          .count() })
+        .where(eq(videos.id, comment.videoId));
     }
 
     return comment;
   }
 
   async createFollow(insertFollow: InsertFollow): Promise<Follow> {
-    const id = this.currentIds.follows++;
-    const follow: Follow = {
-      ...insertFollow,
-      id,
-      followerId: insertFollow.followerId || null,
-      followingId: insertFollow.followingId || null,
-      createdAt: new Date()
-    };
-    this.follows.set(id, follow);
+    const [follow] = await db.insert(follows).values(insertFollow).returning();
 
-    if (follow.followerId !== null && follow.followingId !== null) {
-      const follower = await this.getUser(follow.followerId);
-      const following = await this.getUser(follow.followingId);
+    // Update follower counts
+    if (follow.followerId && follow.followingId) {
+      await db.update(users)
+        .set({ following: db.select().from(follows)
+          .where(eq(follows.followerId, follow.followerId))
+          .count() })
+        .where(eq(users.id, follow.followerId));
 
-      if (follower) {
-        follower.following = (follower.following || 0) + 1;
-        this.users.set(follower.id, follower);
-      }
-      if (following) {
-        following.followers = (following.followers || 0) + 1;
-        this.users.set(following.id, following);
-      }
+      await db.update(users)
+        .set({ followers: db.select().from(follows)
+          .where(eq(follows.followingId, follow.followingId))
+          .count() })
+        .where(eq(users.id, follow.followingId));
     }
 
     return follow;
   }
 
   async deleteFollow(followerId: number, followingId: number): Promise<void> {
-    const follow = Array.from(this.follows.values()).find(
-      f => f.followerId === followerId && f.followingId === followingId
-    );
+    await db.delete(follows)
+      .where(
+        and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        )
+      );
 
-    if (follow) {
-      this.follows.delete(follow.id);
+    // Update follower counts
+    await db.update(users)
+      .set({ following: db.select().from(follows)
+        .where(eq(follows.followerId, followerId))
+        .count() })
+      .where(eq(users.id, followerId));
 
-      const follower = await this.getUser(followerId);
-      const following = await this.getUser(followingId);
-
-      if (follower && follower.following !== null) {
-        follower.following--;
-        this.users.set(follower.id, follower);
-      }
-      if (following && following.followers !== null) {
-        following.followers--;
-        this.users.set(following.id, following);
-      }
-    }
+    await db.update(users)
+      .set({ followers: db.select().from(follows)
+        .where(eq(follows.followingId, followingId))
+        .count() })
+      .where(eq(users.id, followingId));
   }
 
   async getFollowers(userId: number): Promise<User[]> {
-    const followerIds = Array.from(this.follows.values())
-      .filter(f => f.followingId === userId)
-      .map(f => f.followerId)
-      .filter((id): id is number => id !== null);
+    const result = await db
+      .select({ user: users })
+      .from(follows)
+      .innerJoin(users, eq(users.id, follows.followerId))
+      .where(eq(follows.followingId, userId));
 
-    return Array.from(this.users.values())
-      .filter(user => followerIds.includes(user.id));
+    return result.map(r => r.user);
   }
 
   async getFollowing(userId: number): Promise<User[]> {
-    const followingIds = Array.from(this.follows.values())
-      .filter(f => f.followerId === userId)
-      .map(f => f.followingId)
-      .filter((id): id is number => id !== null);
+    const result = await db
+      .select({ user: users })
+      .from(follows)
+      .innerJoin(users, eq(users.id, follows.followingId))
+      .where(eq(follows.followerId, userId));
 
-    return Array.from(this.users.values())
-      .filter(user => followingIds.includes(user.id));
+    return result.map(r => r.user);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
