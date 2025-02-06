@@ -19,62 +19,58 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      const video = videoRef.current;
+    const video = videoRef.current;
+    if (!video) return;
 
-      const handleTimeUpdate = () => {
-        setCurrentTime(video.currentTime);
-      };
+    video.addEventListener('timeupdate', () => {
+      setCurrentTime(video.currentTime);
+    });
 
-      const handleLoadStart = () => {
-        setIsLoading(true);
-        setError(null);
-      };
+    video.addEventListener('canplay', () => {
+      setIsLoading(false);
+      if (autoPlay) {
+        video.play().catch(() => setIsPlaying(false));
+      }
+    });
 
-      const handleLoadedData = () => {
-        setIsLoading(false);
-        if (autoPlay) {
-          video.play().catch(() => {
-            console.error('Failed to autoplay video');
-            setIsPlaying(false);
-          });
-          setIsPlaying(true);
-        }
-      };
+    video.addEventListener('waiting', () => {
+      setIsLoading(true);
+    });
 
-      const handleError = () => {
-        setIsLoading(false);
-        setError("Failed to load video");
-      };
+    video.addEventListener('playing', () => {
+      setIsPlaying(true);
+      setIsLoading(false);
+      setError(null);
+    });
 
-      video.addEventListener('timeupdate', handleTimeUpdate);
-      video.addEventListener('loadstart', handleLoadStart);
-      video.addEventListener('loadeddata', handleLoadedData);
-      video.addEventListener('error', handleError);
+    video.addEventListener('pause', () => {
+      setIsPlaying(false);
+    });
 
-      return () => {
-        if (!video.paused) {
-          video.pause();
-        }
-        video.removeEventListener('timeupdate', handleTimeUpdate);
-        video.removeEventListener('loadstart', handleLoadStart);
-        video.removeEventListener('loadeddata', handleLoadedData);
-        video.removeEventListener('error', handleError);
-      };
-    }
-  }, [autoPlay, video.videoUrl]);
+    video.addEventListener('error', () => {
+      setError('Failed to load video. Please try again.');
+      setIsLoading(false);
+    });
+
+    // Load the video
+    video.load();
+
+    return () => {
+      video.pause();
+    };
+  }, [video.videoUrl, autoPlay]);
 
   const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play().catch(() => {
-          setError("Failed to play video");
-          setIsPlaying(false);
-        });
-      }
-      setIsPlaying(!isPlaying);
+    if (!videoRef.current) return;
+
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch((err) => {
+        console.error('Failed to play video:', err);
+        setError('Failed to play video. Please try again.');
+        setIsPlaying(false);
+      });
     }
   };
 
@@ -85,11 +81,10 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
   };
 
   const handleRetry = () => {
-    if (videoRef.current) {
-      setError(null);
-      setIsLoading(true);
-      videoRef.current.load();
-    }
+    if (!videoRef.current) return;
+    setError(null);
+    setIsLoading(true);
+    videoRef.current.load();
   };
 
   return (
@@ -103,16 +98,15 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
           playsInline
           onClick={togglePlay}
           poster={video.thumbnail || undefined}
+          crossOrigin="anonymous"
         />
 
-        {/* Loading state */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <Loader2 className="w-8 h-8 animate-spin text-white" />
           </div>
         )}
 
-        {/* Error state */}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <div className="text-center space-y-4">
@@ -124,7 +118,6 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
           </div>
         )}
 
-        {/* Play button overlay */}
         {!isPlaying && !isLoading && !error && (
           <div className="absolute inset-0 flex items-center justify-center">
             <button
@@ -143,7 +136,6 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
           </div>
         )}
 
-        {/* Emoji reactions container */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
           <div className="flex justify-center">
             <EmojiReactions targetType="video" targetId={video.id} />
