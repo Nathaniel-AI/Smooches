@@ -37,6 +37,9 @@ async function initializeMockData() {
       }
     }
 
+    // Wait a bit to ensure users are created
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     // Add mock videos
     for (const video of mockVideos) {
       const existingVideos = await storage.getUserVideos(video.userId);
@@ -54,11 +57,14 @@ async function initializeMockData() {
 
     // Add mock comments
     for (const comment of mockComments) {
-      await storage.createComment({
-        userId: comment.userId,
-        videoId: comment.videoId,
-        content: comment.content
-      });
+      const existingComments = await storage.getComments(comment.videoId);
+      if (!existingComments.some(c => c.content === comment.content)) {
+        await storage.createComment({
+          userId: comment.userId,
+          videoId: comment.videoId,
+          content: comment.content
+        });
+      }
     }
   } catch (error) {
     console.error('Error initializing mock data:', error);
