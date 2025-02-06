@@ -1,0 +1,27 @@
+{
+  "variant": "professional",
+  "primary": "hsl(339, 90%, 51%)",
+  "appearance": "dark",
+  "radius": 0.75,
+  "custom": {
+    "background": "hsl(0, 0%, 0%)",
+    "foreground": "hsl(0, 0%, 100%)",
+    "card": "hsl(0, 0%, 10%)",
+    "card-foreground": "hsl(0, 0%, 100%)",
+    "popover": "hsl(0, 0%, 10%)",
+    "popover-foreground": "hsl(0, 0%, 100%)",
+    "primary": "hsl(339, 90%, 51%)",
+    "primary-foreground": "hsl(0, 0%, 100%)",
+    "secondary": "hsl(0, 0%, 15%)",
+    "secondary-foreground": "hsl(0, 0%, 100%)",
+    "muted": "hsl(0, 0%, 20%)",
+    "muted-foreground": "hsl(0, 0%, 70%)",
+    "accent": "hsl(339, 90%, 51%)",
+    "accent-foreground": "hsl(0, 0%, 100%)",
+    "destructive": "hsl(0, 84%, 60%)",
+    "destructive-foreground": "hsl(0, 0%, 100%)",
+    "border": "hsl(0, 0%, 20%)",
+    "input": "hsl(0, 0%, 20%)",
+    "ring": "hsl(339, 90%, 51%)"
+  }
+}
