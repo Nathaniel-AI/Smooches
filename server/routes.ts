@@ -374,5 +374,25 @@ export function registerRoutes(app: Express): Server {
     res.json(earnings);
   });
 
+  // Clip Generation
+  app.post("/api/clips/generate", async (req, res) => {
+    try {
+      const { audioUrl, startTime, endTime } = req.body;
+
+      if (!audioUrl || typeof startTime !== 'number' || typeof endTime !== 'number') {
+        return res.status(400).json({ message: "Invalid clip parameters" });
+      }
+
+      // TODO: Implement actual audio processing using ffmpeg
+      // For now, return a mock response
+      const clipUrl = audioUrl;
+
+      res.json({ clipUrl });
+    } catch (error) {
+      console.error('Error generating clip:', error);
+      res.status(500).json({ message: "Failed to generate clip" });
+    }
+  });
+
   return httpServer;
 }
