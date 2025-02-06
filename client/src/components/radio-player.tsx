@@ -6,7 +6,6 @@ import { Volume2, VolumeX } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import type { RadioStation, RadioSchedule } from "@shared/schema";
 import { EmojiReactions } from "./emoji-reactions";
-import { ClipGenerator } from "./clip-generator";
 
 interface RadioPlayerProps {
   station: RadioStation;
@@ -16,7 +15,6 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(80);
   const [audio] = useState(new Audio(station.streamUrl));
-  const [clipMode, setClipMode] = useState(false);
 
   const { data: currentShow } = useQuery<RadioSchedule>({
     queryKey: [`/api/radio-stations/${station.id}/current-show`],
@@ -107,27 +105,7 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
             step={1}
           />
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setClipMode(!clipMode)}
-        >
-          {clipMode ? "Hide Clip Tool" : "Create Clip"}
-        </Button>
       </div>
-
-      {clipMode && (
-        <div className="mt-4">
-          <ClipGenerator 
-            audioUrl={station.streamUrl}
-            onClipGenerated={(clipUrl) => {
-              // TODO: Handle the generated clip URL
-              console.log('Clip generated:', clipUrl);
-            }}
-          />
-        </div>
-      )}
 
       {schedule && schedule.length > 0 && (
         <div className="space-y-2">
