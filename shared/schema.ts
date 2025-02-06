@@ -64,6 +64,15 @@ export const radioSchedules = pgTable("radio_schedules", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const reactions = pgTable("reactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  emoji: text("emoji").notNull(),
+  targetType: text("target_type").notNull(), 
+  targetId: integer("target_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -111,12 +120,20 @@ export const insertRadioScheduleSchema = createInsertSchema(radioSchedules).pick
   recurringDays: true,
 });
 
+export const insertReactionSchema = createInsertSchema(reactions).pick({
+  userId: true,
+  emoji: true,
+  targetType: true,
+  targetId: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type InsertRadioStation = z.infer<typeof insertRadioStationSchema>;
 export type InsertRadioSchedule = z.infer<typeof insertRadioScheduleSchema>;
+export type InsertReaction = z.infer<typeof insertReactionSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Video = typeof videos.$inferSelect;
@@ -124,3 +141,4 @@ export type Comment = typeof comments.$inferSelect;
 export type Follow = typeof follows.$inferSelect;
 export type RadioStation = typeof radioStations.$inferSelect;
 export type RadioSchedule = typeof radioSchedules.$inferSelect;
+export type Reaction = typeof reactions.$inferSelect;

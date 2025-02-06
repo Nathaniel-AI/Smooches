@@ -8,45 +8,57 @@ import {
   insertCommentSchema,
   insertFollowSchema,
   insertRadioStationSchema,
-  insertRadioScheduleSchema
+  insertRadioScheduleSchema,
+  insertReactionSchema
 } from "@shared/schema";
 import { mockUsers, mockVideos, mockComments } from "../client/src/lib/mock-data";
 
-// Keep track of connected clients for each live stream
+// Keep track of connected clients for each target (video/radio/live)
 const streamClients = new Map<number, Set<WebSocket>>();
+const reactionClients = new Map<string, Set<WebSocket>>();
 
 // Initialize mock data
 async function initializeMockData() {
-  // Add mock users
-  for (const user of mockUsers) {
-    await storage.createUser({
-      username: user.username,
-      password: "password123", // Mock password
-      displayName: user.displayName,
-      avatar: user.avatar,
-      bio: user.bio
-    });
-  }
+  try {
+    // Add mock users if they don't exist
+    for (const user of mockUsers) {
+      const existingUser = await storage.getUserByUsername(user.username);
+      if (!existingUser) {
+        await storage.createUser({
+          username: user.username,
+          password: "password123",
+          displayName: user.displayName,
+          avatar: user.avatar,
+          bio: user.bio
+        });
+      }
+    }
 
-  // Add mock videos
-  for (const video of mockVideos) {
-    await storage.createVideo({
-      userId: video.userId,
-      title: video.title,
-      description: video.description,
-      videoUrl: video.videoUrl,
-      thumbnail: video.thumbnail,
-      isLive: video.isLive
-    });
-  }
+    // Add mock videos
+    for (const video of mockVideos) {
+      const existingVideos = await storage.getUserVideos(video.userId);
+      if (!existingVideos.some(v => v.title === video.title)) {
+        await storage.createVideo({
+          userId: video.userId,
+          title: video.title,
+          description: video.description,
+          videoUrl: video.videoUrl,
+          thumbnail: video.thumbnail,
+          isLive: video.isLive
+        });
+      }
+    }
 
-  // Add mock comments
-  for (const comment of mockComments) {
-    await storage.createComment({
-      userId: comment.userId,
-      videoId: comment.videoId,
-      content: comment.content
-    });
+    // Add mock comments
+    for (const comment of mockComments) {
+      await storage.createComment({
+        userId: comment.userId,
+        videoId: comment.videoId,
+        content: comment.content
+      });
+    }
+  } catch (error) {
+    console.error('Error initializing mock data:', error);
   }
 }
 
@@ -63,7 +75,8 @@ export function registerRoutes(app: Express): Server {
   });
 
   wss.on('connection', (ws) => {
-    let streamId: number | null = null;
+    let streamId: number | undefined = undefined;
+    let reactionTarget: string | undefined = undefined;
 
     ws.on('message', (data) => {
       try {
@@ -72,10 +85,38 @@ export function registerRoutes(app: Express): Server {
         switch (message.type) {
           case 'join':
             streamId = message.streamId;
-            if (!streamClients.has(streamId)) {
-              streamClients.set(streamId, new Set());
+            if (typeof streamId === 'number') {
+              if (!streamClients.has(streamId)) {
+                streamClients.set(streamId, new Set());
+              }
+              streamClients.get(streamId)?.add(ws);
             }
-            streamClients.get(streamId)?.add(ws);
+            break;
+
+          case 'join_reactions':
+            reactionTarget = `${message.targetType}_${message.targetId}`;
+            if (!reactionClients.has(reactionTarget)) {
+              reactionClients.set(reactionTarget, new Set());
+            }
+            reactionClients.get(reactionTarget)?.add(ws);
+            break;
+
+          case 'reaction':
+            if (reactionTarget && reactionClients.has(reactionTarget)) {
+              const reactionMessage = {
+                type: 'reaction',
+                emoji: message.emoji,
+                targetType: message.targetType,
+                targetId: message.targetId,
+                timestamp: new Date().toISOString()
+              };
+
+              reactionClients.get(reactionTarget)?.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify(reactionMessage));
+                }
+              });
+            }
             break;
 
           case 'chat':
@@ -88,7 +129,6 @@ export function registerRoutes(app: Express): Server {
                 timestamp: new Date().toISOString()
               };
 
-              // Broadcast to all clients in this stream
               streamClients.get(streamId)?.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
                   client.send(JSON.stringify(chatMessage));
@@ -107,6 +147,13 @@ export function registerRoutes(app: Express): Server {
         streamClients.get(streamId)?.delete(ws);
         if (streamClients.get(streamId)?.size === 0) {
           streamClients.delete(streamId);
+        }
+      }
+
+      if (reactionTarget && reactionClients.has(reactionTarget)) {
+        reactionClients.get(reactionTarget)?.delete(ws);
+        if (reactionClients.get(reactionTarget)?.size === 0) {
+          reactionClients.delete(reactionTarget);
         }
       }
     });
@@ -247,6 +294,23 @@ export function registerRoutes(app: Express): Server {
     res.json(schedule);
   });
 
+  // Reactions API
+  app.post("/api/reactions", async (req, res) => {
+    const result = insertReactionSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid reaction data" });
+    }
+    const reaction = await storage.createReaction(result.data);
+    res.json(reaction);
+  });
+
+  app.get("/api/reactions/:targetType/:targetId", async (req, res) => {
+    const reactions = await storage.getReactions(
+      req.params.targetType,
+      parseInt(req.params.targetId)
+    );
+    res.json(reactions);
+  });
 
   return httpServer;
 }

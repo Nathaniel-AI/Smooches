@@ -1,8 +1,25 @@
-import { 
-  users, videos, comments, follows,
-  type User, type Video, type Comment, type Follow,
-  type InsertUser, type InsertVideo, type InsertComment, type InsertFollow,
-  type RadioStation, type InsertRadioStation, type RadioSchedule, type InsertRadioSchedule
+import {
+  users,
+  videos,
+  comments,
+  follows,
+  type User,
+  type Video,
+  type Comment,
+  type Follow,
+  type InsertUser,
+  type InsertVideo,
+  type InsertComment,
+  type InsertFollow,
+  type RadioStation,
+  type InsertRadioStation,
+  type RadioSchedule,
+  type InsertRadioSchedule,
+  type Reaction,
+  type InsertReaction,
+  radioStations,
+  radioSchedules,
+  reactions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
@@ -39,6 +56,10 @@ export interface IStorage {
   getStationSchedules(stationId: number): Promise<RadioSchedule[]>;
   createRadioSchedule(schedule: InsertRadioSchedule): Promise<RadioSchedule>;
   getCurrentSchedule(stationId: number): Promise<RadioSchedule | undefined>;
+
+  // Reactions
+  createReaction(reaction: InsertReaction): Promise<Reaction>;
+  getReactions(targetType: string, targetId: number): Promise<Reaction[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -237,6 +258,26 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return currentShow;
+  }
+
+  async createReaction(reaction: InsertReaction): Promise<Reaction> {
+    const [newReaction] = await db
+      .insert(reactions)
+      .values(reaction)
+      .returning();
+    return newReaction;
+  }
+
+  async getReactions(targetType: string, targetId: number): Promise<Reaction[]> {
+    return await db
+      .select()
+      .from(reactions)
+      .where(
+        and(
+          eq(reactions.targetType, targetType),
+          eq(reactions.targetId, targetId)
+        )
+      );
   }
 }
 

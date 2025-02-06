@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import type { RadioStation, RadioSchedule } from "@shared/schema";
+import { EmojiReactions } from "./emoji-reactions";
 
 interface RadioPlayerProps {
   station: RadioStation;
@@ -121,6 +122,9 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
           </div>
         </div>
       )}
+      <div className="mt-4 flex justify-center">
+        <EmojiReactions targetType="radio" targetId={station.id} />
+      </div>
     </Card>
   );
 }

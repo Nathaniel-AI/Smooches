@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { type Video } from "@shared/schema";
+import { EmojiReactions } from "./emoji-reactions";
 
 interface VideoPlayerProps {
   video: Video;
@@ -13,7 +14,7 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
 
   useEffect(() => {
     if (autoPlay && videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(console.error);
       setIsPlaying(true);
     }
   }, [autoPlay]);
@@ -23,7 +24,7 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        videoRef.current.play().catch(console.error);
       }
       setIsPlaying(!isPlaying);
     }
@@ -40,8 +41,10 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
         onClick={togglePlay}
         poster={video.thumbnail || undefined}
       />
-      <div className="absolute inset-0 flex items-center justify-center">
-        {!isPlaying && (
+
+      {/* Play button overlay */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center">
           <button
             onClick={togglePlay}
             className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-all hover:bg-white/30"
@@ -55,7 +58,14 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
               <path d="M8 5v14l11-7z" />
             </svg>
           </button>
-        )}
+        </div>
+      )}
+
+      {/* Emoji reactions container */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+        <div className="flex justify-center">
+          <EmojiReactions targetType="video" targetId={video.id} />
+        </div>
       </div>
     </Card>
   );
