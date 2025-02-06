@@ -14,13 +14,21 @@ interface RecommendedContentProps {
 }
 
 export function RecommendedContent({ preferences }: RecommendedContentProps) {
-  const { data: videos, isLoading: videosLoading } = useQuery<(Video & { genres: string[] })[]>({
+  const { data: videos, isLoading: videosLoading, error: videosError } = useQuery<(Video & { genres: string[] })[]>({
     queryKey: ["/api/videos"],
   });
 
-  const { data: stations, isLoading: stationsLoading } = useQuery<(RadioStation & { genres: string[] })[]>({
+  const { data: stations, isLoading: stationsLoading, error: stationsError } = useQuery<(RadioStation & { genres: string[] })[]>({
     queryKey: ["/api/radio-stations"],
   });
+
+  if (videosError || stationsError) {
+    return (
+      <div className="text-center py-12 text-red-500">
+        Error loading recommendations
+      </div>
+    );
+  }
 
   if (videosLoading || stationsLoading) {
     return (

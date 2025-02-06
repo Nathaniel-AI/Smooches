@@ -23,10 +23,15 @@ const reactionClients = new Map<string, Set<WebSocket>>();
 // Initialize mock data
 async function initializeMockData() {
   try {
+    // Clear any existing data first
+    console.log('Initializing mock data...');
+
     // Add mock users if they don't exist
     for (const user of mockUsers) {
+      console.log(`Checking user ${user.username}...`);
       const existingUser = await storage.getUserByUsername(user.username);
       if (!existingUser) {
+        console.log(`Creating user ${user.username}...`);
         await storage.createUser({
           username: user.username,
           password: "password123",
@@ -37,11 +42,13 @@ async function initializeMockData() {
       }
     }
 
-    // Wait a bit to ensure users are created
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Wait to ensure users are created
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    console.log('Users created, proceeding with videos...');
 
     // Add mock videos
     for (const video of mockVideos) {
+      console.log(`Creating video for user ${video.userId}...`);
       const existingVideos = await storage.getUserVideos(video.userId);
       if (!existingVideos.some(v => v.title === video.title)) {
         await storage.createVideo({
@@ -55,6 +62,10 @@ async function initializeMockData() {
       }
     }
 
+    // Wait to ensure videos are created
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Videos created, proceeding with comments...');
+
     // Add mock comments
     for (const comment of mockComments) {
       const existingComments = await storage.getComments(comment.videoId);
@@ -66,6 +77,8 @@ async function initializeMockData() {
         });
       }
     }
+
+    console.log('Mock data initialization complete.');
   } catch (error) {
     console.error('Error initializing mock data:', error);
   }
