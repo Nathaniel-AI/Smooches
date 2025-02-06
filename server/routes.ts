@@ -12,8 +12,7 @@ import {
   insertReactionSchema,
   insertTransactionSchema,
   insertSubscriptionSchema,
-  insertEarningsSchema,
-  insertPodcastClipSchema
+  insertEarningsSchema
 } from "@shared/schema";
 import { mockUsers, mockVideos, mockComments } from "../client/src/lib/mock-data";
 
@@ -373,34 +372,6 @@ export function registerRoutes(app: Express): Server {
     }
     const earnings = await storage.createEarnings(result.data);
     res.json(earnings);
-  });
-
-  // Podcast Clips
-  app.post("/api/podcast-clips", async (req, res) => {
-    const result = insertPodcastClipSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Invalid clip data" });
-    }
-    const clip = await storage.createPodcastClip(result.data);
-    res.json(clip);
-  });
-
-  app.get("/api/podcast-clips/:id", async (req, res) => {
-    const clip = await storage.getPodcastClip(parseInt(req.params.id));
-    if (!clip) {
-      return res.status(404).json({ message: "Clip not found" });
-    }
-    res.json(clip);
-  });
-
-  app.get("/api/videos/:id/podcast-clips", async (req, res) => {
-    const clips = await storage.getVideoPodcastClips(parseInt(req.params.id));
-    res.json(clips);
-  });
-
-  app.get("/api/users/:id/podcast-clips", async (req, res) => {
-    const clips = await storage.getUserPodcastClips(parseInt(req.params.id));
-    res.json(clips);
   });
 
   return httpServer;
