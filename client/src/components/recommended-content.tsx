@@ -14,16 +14,20 @@ interface RecommendedContentProps {
 }
 
 export function RecommendedContent({ preferences }: RecommendedContentProps) {
-  const { data: videos } = useQuery<(Video & { genres: string[] })[]>({
+  const { data: videos, isLoading: videosLoading } = useQuery<(Video & { genres: string[] })[]>({
     queryKey: ["/api/videos"],
   });
 
-  const { data: stations } = useQuery<(RadioStation & { genres: string[] })[]>({
+  const { data: stations, isLoading: stationsLoading } = useQuery<(RadioStation & { genres: string[] })[]>({
     queryKey: ["/api/radio-stations"],
   });
 
-  if (!videos?.length && !stations?.length) {
-    return null;
+  if (videosLoading || stationsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-48 bg-accent/10 animate-pulse rounded-lg" />
+      </div>
+    );
   }
 
   const recommendedVideos = videos 
@@ -33,6 +37,14 @@ export function RecommendedContent({ preferences }: RecommendedContentProps) {
   const recommendedStations = stations
     ? recommendationEngine.sortByRecommendationScore(stations, preferences).slice(0, 2)
     : [];
+
+  if (!recommendedVideos.length && !recommendedStations.length) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        No recommendations available yet
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -45,16 +57,18 @@ export function RecommendedContent({ preferences }: RecommendedContentProps) {
                 <VideoPlayer video={video} />
                 <CardContent className="p-4">
                   <h3 className="font-semibold">{video.title}</h3>
-                  <div className="mt-2">
-                    {video.reasons.map((reason, index) => (
-                      <span
-                        key={index}
-                        className="inline-block px-2 py-1 mr-2 mb-2 text-xs rounded-full bg-primary/10 text-primary"
-                      >
-                        {reason}
-                      </span>
-                    ))}
-                  </div>
+                  {video.reasons && video.reasons.length > 0 && (
+                    <div className="mt-2">
+                      {video.reasons.map((reason, index) => (
+                        <span
+                          key={index}
+                          className="inline-block px-2 py-1 mr-2 mb-2 text-xs rounded-full bg-primary/10 text-primary"
+                        >
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -70,16 +84,18 @@ export function RecommendedContent({ preferences }: RecommendedContentProps) {
               <Card key={station.id}>
                 <RadioPlayer station={station} />
                 <CardContent className="p-4">
-                  <div className="mt-2">
-                    {station.reasons.map((reason, index) => (
-                      <span
-                        key={index}
-                        className="inline-block px-2 py-1 mr-2 mb-2 text-xs rounded-full bg-primary/10 text-primary"
-                      >
-                        {reason}
-                      </span>
-                    ))}
-                  </div>
+                  {station.reasons && station.reasons.length > 0 && (
+                    <div className="mt-2">
+                      {station.reasons.map((reason, index) => (
+                        <span
+                          key={index}
+                          className="inline-block px-2 py-1 mr-2 mb-2 text-xs rounded-full bg-primary/10 text-primary"
+                        >
+                          {reason}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
