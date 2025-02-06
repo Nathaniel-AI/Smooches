@@ -16,6 +16,7 @@ import Profile from "@/pages/profile";
 import Live from "@/pages/live";
 import Radio from "@/pages/radio";
 import MonetizationDashboard from "@/pages/monetization";
+import { Header } from "@/components/header";
 
 function Navigation() {
   return (
@@ -56,7 +57,8 @@ function Navigation() {
 
 function Router() {
   return (
-    <div className="pb-20">
+    <div className="pb-20 pt-16">
+      <Header />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/profile/:id" component={Profile} />
