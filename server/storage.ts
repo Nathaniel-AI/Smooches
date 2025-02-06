@@ -4,7 +4,7 @@ import {
   type InsertUser, type InsertVideo, type InsertComment, type InsertFollow
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -70,12 +70,16 @@ export class DatabaseStorage implements IStorage {
   async createComment(insertComment: InsertComment): Promise<Comment> {
     const [comment] = await db.insert(comments).values(insertComment).returning();
 
-    // Update video comment count
+    // Update video comment count using a subquery
     if (comment.videoId) {
-      await db.update(videos)
-        .set({ comments: db.select().from(comments)
-          .where(eq(comments.videoId, comment.videoId))
-          .count() })
+      const commentCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(comments)
+        .where(eq(comments.videoId, comment.videoId));
+
+      await db
+        .update(videos)
+        .set({ comments: commentCount[0].count })
         .where(eq(videos.id, comment.videoId));
     }
 
@@ -85,18 +89,26 @@ export class DatabaseStorage implements IStorage {
   async createFollow(insertFollow: InsertFollow): Promise<Follow> {
     const [follow] = await db.insert(follows).values(insertFollow).returning();
 
-    // Update follower counts
+    // Update follower counts using subqueries
     if (follow.followerId && follow.followingId) {
-      await db.update(users)
-        .set({ following: db.select().from(follows)
-          .where(eq(follows.followerId, follow.followerId))
-          .count() })
+      const followingCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(follows)
+        .where(eq(follows.followerId, follow.followerId));
+
+      const followerCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(follows)
+        .where(eq(follows.followingId, follow.followingId));
+
+      await db
+        .update(users)
+        .set({ following: followingCount[0].count })
         .where(eq(users.id, follow.followerId));
 
-      await db.update(users)
-        .set({ followers: db.select().from(follows)
-          .where(eq(follows.followingId, follow.followingId))
-          .count() })
+      await db
+        .update(users)
+        .set({ followers: followerCount[0].count })
         .where(eq(users.id, follow.followingId));
     }
 
@@ -112,17 +124,25 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    // Update follower counts
-    await db.update(users)
-      .set({ following: db.select().from(follows)
-        .where(eq(follows.followerId, followerId))
-        .count() })
+    // Update follower counts using subqueries
+    const followingCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(follows)
+      .where(eq(follows.followerId, followerId));
+
+    const followerCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(follows)
+      .where(eq(follows.followingId, followingId));
+
+    await db
+      .update(users)
+      .set({ following: followingCount[0].count })
       .where(eq(users.id, followerId));
 
-    await db.update(users)
-      .set({ followers: db.select().from(follows)
-        .where(eq(follows.followingId, followingId))
-        .count() })
+    await db
+      .update(users)
+      .set({ followers: followerCount[0].count })
       .where(eq(users.id, followingId));
   }
 

@@ -20,17 +20,26 @@ export function UserProfile({ userId, detailed = false }: UserProfileProps) {
 
   if (!user) return null;
 
+  const getInitials = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <div className={`flex items-center gap-4 ${detailed ? 'p-4' : ''}`}>
-      <Avatar className="w-12 h-12">
-        <AvatarImage src={user.avatar} />
-        <AvatarFallback>{user.displayName[0]}</AvatarFallback>
+      <Avatar className="w-12 h-12 border border-border">
+        {user.avatar ? (
+          <AvatarImage src={user.avatar} alt={user.displayName} />
+        ) : (
+          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+        )}
       </Avatar>
-      
+
       <div className="flex-1">
         <h3 className="font-semibold text-white">{user.displayName}</h3>
         <p className="text-sm text-gray-300">@{user.username}</p>
-        {detailed && <p className="mt-2 text-gray-300">{user.bio}</p>}
+        {detailed && user.bio && (
+          <p className="mt-2 text-gray-300">{user.bio}</p>
+        )}
       </div>
 
       {detailed && (
@@ -45,7 +54,7 @@ export function UserProfile({ userId, detailed = false }: UserProfileProps) {
           </div>
         </div>
       )}
-      
+
       <Button variant="secondary" size="sm">
         Follow
       </Button>

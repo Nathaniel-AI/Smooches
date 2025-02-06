@@ -38,13 +38,13 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
         loop
         playsInline
         onClick={togglePlay}
-        poster={video.thumbnail}
+        poster={video.thumbnail || undefined}
       />
       <div className="absolute inset-0 flex items-center justify-center">
         {!isPlaying && (
           <button
             onClick={togglePlay}
-            className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center"
+            className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-all hover:bg-white/30"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
