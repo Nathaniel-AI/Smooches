@@ -150,21 +150,21 @@ export const mockRadioStations = [
   {
     id: 1,
     name: "Dance Vibes",
-    description: "Non-stop dance hits",
+    description: "Non-stop dance hits by Dance Queen",
     streamUrl: "https://example.com/stream1",
     coverImage: "https://picsum.photos/200",
     isActive: true,
-    userId: 1,
+    userId: 1, // dancequeen
     createdAt: new Date()
   },
   {
     id: 2,
     name: "Chill Lounge",
-    description: "Relaxing beats 24/7",
+    description: "Relaxing beats 24/7 by Music Pro",
     streamUrl: "https://example.com/stream2",
     coverImage: "https://picsum.photos/200",
     isActive: true,
-    userId: 3, 
+    userId: 8, // musicpro - fixed ID
     createdAt: new Date()
   }
 ];
