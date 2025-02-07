@@ -28,10 +28,10 @@ import {
 const streamClients = new Map<number, Set<WebSocket>>();
 const reactionClients = new Map<string, Set<WebSocket>>();
 
-// Initialize mock data
+// Update the initializeMockData function to handle data order correctly
 async function initializeMockData() {
   try {
-    // Add mock users if they don't exist
+    // Add mock users first
     for (const user of mockUsers) {
       const existingUser = await storage.getUserByUsername(user.username);
       if (!existingUser) {
@@ -60,47 +60,19 @@ async function initializeMockData() {
       }
     }
 
-    // Add mock comments
-    for (const comment of mockComments) {
-      // We'll add all comments as they're timestamped
-      await storage.createComment({
-        userId: comment.userId,
-        videoId: comment.videoId,
-        content: comment.content
-      });
-    }
-
-    // Add mock transactions
-    for (const transaction of mockTransactions) {
-      await storage.createTransaction({
-        userId: transaction.userId,
-        amount: transaction.amount,
-        type: transaction.type,
-        status: transaction.status,
-        fromUserId: transaction.fromUserId
-      });
-    }
-
-    // Add mock earnings
-    for (const earning of mockEarnings) {
-      await storage.createEarnings({
-        userId: earning.userId,
-        amount: earning.amount,
-        type: earning.type,
-        month: earning.month
-      });
-    }
-
     // Add mock radio stations
     for (const station of mockRadioStations) {
-      await storage.createRadioStation({
-        name: station.name,
-        description: station.description,
-        streamUrl: station.streamUrl,
-        coverImage: station.coverImage,
-        isActive: station.isActive,
-        userId: station.userId
-      });
+      const existingStation = await storage.getRadioStation(station.id);
+      if (!existingStation) {
+        await storage.createRadioStation({
+          name: station.name,
+          description: station.description,
+          streamUrl: station.streamUrl,
+          coverImage: station.coverImage,
+          isActive: station.isActive,
+          userId: station.userId
+        });
+      }
     }
 
     // Add mock schedules
@@ -113,6 +85,36 @@ async function initializeMockData() {
         endTime: schedule.endTime,
         isRecurring: schedule.isRecurring,
         recurringDays: schedule.recurringDays
+      });
+    }
+
+    // Add mock comments
+    for (const comment of mockComments) {
+      await storage.createComment({
+        userId: comment.userId,
+        videoId: comment.videoId,
+        content: comment.content
+      });
+    }
+
+    // Add mock transactions with string amounts
+    for (const transaction of mockTransactions) {
+      await storage.createTransaction({
+        userId: transaction.userId,
+        amount: transaction.amount.toFixed(2),
+        type: transaction.type,
+        status: transaction.status,
+        fromUserId: transaction.fromUserId
+      });
+    }
+
+    // Add mock earnings with string amounts
+    for (const earning of mockEarnings) {
+      await storage.createEarnings({
+        userId: earning.userId,
+        amount: earning.amount.toFixed(2),
+        type: earning.type,
+        month: earning.month
       });
     }
   } catch (error) {
