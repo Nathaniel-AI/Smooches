@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // Added useQueryClient
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import type { RadioStation, RadioSchedule } from "@shared/schema";
 import { EmojiReactions } from "./emoji-reactions";
+import { ScheduleModal } from "./radio/schedule-modal";
 
 interface RadioPlayerProps {
   station: RadioStation;
@@ -15,6 +16,7 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(80);
   const [audio] = useState(new Audio(station.streamUrl));
+  const queryClient = useQueryClient(); // Added useQueryClient hook
 
   const { data: currentShow } = useQuery<RadioSchedule>({
     queryKey: [`/api/radio-stations/${station.id}/current-show`],
@@ -53,22 +55,35 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
     });
   };
 
+  const handleScheduleCreated = () => {
+    // Invalidate schedule queries to refresh the data
+    queryClient.invalidateQueries({
+      queryKey: [`/api/radio-stations/${station.id}/schedule`]
+    });
+  };
+
   return (
     <Card className="p-4 space-y-4">
-      <div className="flex items-center gap-4">
-        {station.coverImage && (
-          <img
-            src={station.coverImage}
-            alt={station.name}
-            className="w-16 h-16 rounded-md object-cover"
-          />
-        )}
-        <div>
-          <h3 className="font-semibold">{station.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {currentShow ? currentShow.showName : 'Live Radio'}
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {station.coverImage && (
+            <img
+              src={station.coverImage}
+              alt={station.name}
+              className="w-16 h-16 rounded-md object-cover"
+            />
+          )}
+          <div>
+            <h3 className="font-semibold">{station.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {currentShow ? currentShow.showName : 'Live Radio'}
+            </p>
+          </div>
         </div>
+        <ScheduleModal 
+          stationId={station.id}
+          onScheduleCreated={handleScheduleCreated}
+        />
       </div>
 
       {currentShow && (
