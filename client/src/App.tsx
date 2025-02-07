@@ -59,7 +59,9 @@ function Navigation() {
 
 function Router() {
   const [showOnboarding, setShowOnboarding] = useState(() => {
-    return !localStorage.getItem('onboardingComplete');
+    // More explicit check for first-time users
+    const completed = localStorage.getItem('onboardingComplete');
+    return completed === null || completed !== 'true';
   });
 
   const handleOnboardingComplete = () => {
@@ -68,7 +70,11 @@ function Router() {
   };
 
   if (showOnboarding) {
-    return <OnboardingWizard onComplete={handleOnboardingComplete} />;
+    return (
+      <div className="min-h-screen bg-background">
+        <OnboardingWizard onComplete={handleOnboardingComplete} />
+      </div>
+    );
   }
 
   return (
