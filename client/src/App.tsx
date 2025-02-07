@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -58,10 +58,17 @@ function Navigation() {
 }
 
 function Router() {
-  const [showOnboarding, setShowOnboarding] = useState(true); // TODO: Check if user is new
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('onboardingComplete');
+  });
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('onboardingComplete', 'true');
+    setShowOnboarding(false);
+  };
 
   if (showOnboarding) {
-    return <OnboardingWizard onComplete={() => setShowOnboarding(false)} />;
+    return <OnboardingWizard onComplete={handleOnboardingComplete} />;
   }
 
   return (
