@@ -31,17 +31,39 @@ const reactionClients = new Map<string, Set<WebSocket>>();
 // Update the initializeMockData function to handle data order correctly
 async function initializeMockData() {
   try {
-    // Add mock users first
+    // Add mock users first and store their IDs
+    const createdUsers = new Set<number>();
     for (const user of mockUsers) {
       const existingUser = await storage.getUserByUsername(user.username);
       if (!existingUser) {
-        await storage.createUser({
+        const newUser = await storage.createUser({
           username: user.username,
           password: "password123",
           displayName: user.displayName,
           avatar: user.avatar,
           bio: user.bio
         });
+        createdUsers.add(newUser.id);
+      } else {
+        createdUsers.add(existingUser.id);
+      }
+    }
+
+    // Only proceed with radio stations after confirming users exist
+    for (const station of mockRadioStations) {
+      // Check if the user exists before creating the station
+      if (createdUsers.has(station.userId)) {
+        const existingStation = await storage.getRadioStation(station.id);
+        if (!existingStation) {
+          await storage.createRadioStation({
+            name: station.name,
+            description: station.description,
+            streamUrl: station.streamUrl,
+            coverImage: station.coverImage,
+            isActive: station.isActive,
+            userId: station.userId
+          });
+        }
       }
     }
 
@@ -56,21 +78,6 @@ async function initializeMockData() {
           videoUrl: video.videoUrl,
           thumbnail: video.thumbnail,
           isLive: video.isLive
-        });
-      }
-    }
-
-    // Add mock radio stations
-    for (const station of mockRadioStations) {
-      const existingStation = await storage.getRadioStation(station.id);
-      if (!existingStation) {
-        await storage.createRadioStation({
-          name: station.name,
-          description: station.description,
-          streamUrl: station.streamUrl,
-          coverImage: station.coverImage,
-          isActive: station.isActive,
-          userId: station.userId
         });
       }
     }
