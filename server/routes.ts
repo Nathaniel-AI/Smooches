@@ -49,13 +49,14 @@ async function initializeMockData() {
       }
     }
 
-    // Only proceed with radio stations after confirming users exist
+    // Create radio stations and store their IDs
+    const createdStations = new Set<number>();
     for (const station of mockRadioStations) {
       // Check if the user exists before creating the station
       if (createdUsers.has(station.userId)) {
         const existingStation = await storage.getRadioStation(station.id);
         if (!existingStation) {
-          await storage.createRadioStation({
+          const newStation = await storage.createRadioStation({
             name: station.name,
             description: station.description,
             streamUrl: station.streamUrl,
@@ -63,6 +64,9 @@ async function initializeMockData() {
             isActive: station.isActive,
             userId: station.userId
           });
+          createdStations.add(newStation.id);
+        } else {
+          createdStations.add(existingStation.id);
         }
       }
     }
@@ -82,17 +86,19 @@ async function initializeMockData() {
       }
     }
 
-    // Add mock schedules
+    // Add schedules only for existing stations
     for (const schedule of mockSchedules) {
-      await storage.createRadioSchedule({
-        stationId: schedule.stationId,
-        showName: schedule.showName,
-        description: schedule.description,
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
-        isRecurring: schedule.isRecurring,
-        recurringDays: schedule.recurringDays
-      });
+      if (createdStations.has(schedule.stationId)) {
+        await storage.createRadioSchedule({
+          stationId: schedule.stationId,
+          showName: schedule.showName,
+          description: schedule.description,
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+          isRecurring: schedule.isRecurring,
+          recurringDays: schedule.recurringDays
+        });
+      }
     }
 
     // Add mock comments
