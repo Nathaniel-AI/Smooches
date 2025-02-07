@@ -14,7 +14,15 @@ import {
   insertSubscriptionSchema,
   insertEarningsSchema
 } from "@shared/schema";
-import { mockUsers, mockVideos, mockComments } from "../client/src/lib/mock-data";
+import { 
+  mockUsers, 
+  mockVideos, 
+  mockComments,
+  mockTransactions,
+  mockEarnings,
+  mockRadioStations,
+  mockSchedules
+} from "../client/src/lib/mock-data";
 
 // Keep track of connected clients for each target (video/radio/live)
 const streamClients = new Map<number, Set<WebSocket>>();
@@ -54,10 +62,57 @@ async function initializeMockData() {
 
     // Add mock comments
     for (const comment of mockComments) {
+      // We'll add all comments as they're timestamped
       await storage.createComment({
         userId: comment.userId,
         videoId: comment.videoId,
         content: comment.content
+      });
+    }
+
+    // Add mock transactions
+    for (const transaction of mockTransactions) {
+      await storage.createTransaction({
+        userId: transaction.userId,
+        amount: transaction.amount,
+        type: transaction.type,
+        status: transaction.status,
+        fromUserId: transaction.fromUserId
+      });
+    }
+
+    // Add mock earnings
+    for (const earning of mockEarnings) {
+      await storage.createEarnings({
+        userId: earning.userId,
+        amount: earning.amount,
+        type: earning.type,
+        month: earning.month
+      });
+    }
+
+    // Add mock radio stations
+    for (const station of mockRadioStations) {
+      await storage.createRadioStation({
+        name: station.name,
+        description: station.description,
+        streamUrl: station.streamUrl,
+        coverImage: station.coverImage,
+        isActive: station.isActive,
+        userId: station.userId
+      });
+    }
+
+    // Add mock schedules
+    for (const schedule of mockSchedules) {
+      await storage.createRadioSchedule({
+        stationId: schedule.stationId,
+        showName: schedule.showName,
+        description: schedule.description,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        isRecurring: schedule.isRecurring,
+        recurringDays: schedule.recurringDays
       });
     }
   } catch (error) {
@@ -357,6 +412,13 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Earnings
+  app.get("/api/earnings", async (_req, res) => {
+    // TODO: Get userId from session
+    const userId = 1; // Mock user ID for now
+    const earnings = await storage.getEarnings(userId);
+    res.json(earnings);
+  });
+
   app.post("/api/earnings", async (req, res) => {
     const result = insertEarningsSchema.safeParse(req.body);
     if (!result.success) {
