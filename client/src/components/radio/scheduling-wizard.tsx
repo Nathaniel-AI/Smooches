@@ -23,7 +23,7 @@ export function SchedulingWizard({ stationId, onComplete }: SchedulingWizardProp
     showName: "",
     description: "",
     startTime: new Date(),
-    endTime: new Date(),
+    endTime: new Date(Date.now() + 3600000), // Default to 1 hour duration
     isRecurring: false,
     recurringDays: [] as string[]
   });
@@ -39,22 +39,25 @@ export function SchedulingWizard({ stationId, onComplete }: SchedulingWizardProp
   const progress = ((step + 1) / steps.length) * 100;
 
   const handleNext = async (data: any) => {
-    setSchedule(prev => ({ ...prev, ...data }));
-    
+    const updatedSchedule = { ...schedule, ...data };
+    setSchedule(updatedSchedule);
+
     if (step === steps.length - 1) {
       try {
-        // Convert times to UTC before sending to server
-        const startTime = new Date(schedule.startTime);
-        const endTime = new Date(schedule.endTime);
+        // Ensure all required fields are present
+        if (!updatedSchedule.showName || !updatedSchedule.description) {
+          throw new Error("Show name and description are required");
+        }
 
+        // Convert dates to ISO strings
         await apiRequest('POST', '/api/radio-schedules', {
           stationId,
-          showName: schedule.showName,
-          description: schedule.description,
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-          isRecurring: schedule.isRecurring,
-          recurringDays: schedule.recurringDays
+          showName: updatedSchedule.showName,
+          description: updatedSchedule.description,
+          startTime: updatedSchedule.startTime.toISOString(),
+          endTime: updatedSchedule.endTime.toISOString(),
+          isRecurring: updatedSchedule.isRecurring,
+          recurringDays: updatedSchedule.recurringDays
         });
 
         toast({
@@ -66,7 +69,7 @@ export function SchedulingWizard({ stationId, onComplete }: SchedulingWizardProp
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to schedule radio show. Please try again.",
+          description: error instanceof Error ? error.message : "Failed to schedule radio show. Please try again.",
           variant: "destructive",
         });
       }

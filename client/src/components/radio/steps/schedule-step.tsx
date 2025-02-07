@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { format, parse, addDays } from "date-fns";
-import { formatInTimeZone, toDate } from "date-fns-tz";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
 interface ScheduleStepProps {
   data: {
@@ -21,29 +21,52 @@ export function ScheduleStep({ data, onNext }: ScheduleStepProps) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
 
-    // Get the time strings from the form
+    const showName = formData.get("showName") as string;
+    const description = formData.get("description") as string;
     const startTimeStr = formData.get("startTime") as string;
     const endTimeStr = formData.get("endTime") as string;
 
-    // Create base date objects for today
+    // Create Date objects in the user's time zone
     const today = new Date();
-    const startDate = parse(startTimeStr, "HH:mm", today);
-    const endDate = parse(endTimeStr, "HH:mm", today);
+    const [startHours, startMinutes] = startTimeStr.split(':').map(Number);
+    const [endHours, endMinutes] = endTimeStr.split(':').map(Number);
 
-    // If end time is before start time, assume it's for the next day
-    const adjustedEndDate = endDate < startDate ? addDays(endDate, 1) : endDate;
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      startHours,
+      startMinutes
+    );
+
+    const endDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      endHours,
+      endMinutes
+    );
+
+    // If end time is earlier than start time, assume it's for the next day
+    if (endDate < startDate) {
+      endDate.setDate(endDate.getDate() + 1);
+    }
 
     onNext({
-      showName: formData.get("showName"),
-      description: formData.get("description"),
+      showName,
+      description,
       startTime: startDate,
-      endTime: adjustedEndDate
+      endTime: endDate
     });
   };
 
-  // Format times for display in the selected time zone
-  const displayStartTime = data.startTime ? formatInTimeZone(data.startTime, data.timeZone, "HH:mm") : "00:00";
-  const displayEndTime = data.endTime ? formatInTimeZone(data.endTime, data.timeZone, "HH:mm") : "01:00";
+  // Convert times to local timezone for display
+  const localStartTime = toZonedTime(data.startTime, data.timeZone);
+  const localEndTime = toZonedTime(data.endTime, data.timeZone);
+
+  // Format times for display
+  const startTimeStr = format(localStartTime, 'HH:mm');
+  const endTimeStr = format(localEndTime, 'HH:mm');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -85,7 +108,7 @@ export function ScheduleStep({ data, onNext }: ScheduleStepProps) {
               id="startTime"
               name="startTime"
               type="time"
-              defaultValue={displayStartTime}
+              defaultValue={startTimeStr}
               required
             />
           </div>
@@ -96,7 +119,7 @@ export function ScheduleStep({ data, onNext }: ScheduleStepProps) {
               id="endTime"
               name="endTime"
               type="time"
-              defaultValue={displayEndTime}
+              defaultValue={endTimeStr}
               required
             />
           </div>
