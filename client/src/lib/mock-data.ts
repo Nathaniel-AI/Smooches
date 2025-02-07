@@ -155,7 +155,7 @@ export const mockRadioStations = [
     coverImage: "https://picsum.photos/200",
     isActive: true,
     userId: 1,
-    createdAt: new Date("2024-03-01")
+    createdAt: new Date()
   },
   {
     id: 2,
@@ -164,8 +164,8 @@ export const mockRadioStations = [
     streamUrl: "https://example.com/stream2",
     coverImage: "https://picsum.photos/200",
     isActive: true,
-    userId: 3,
-    createdAt: new Date("2024-03-02")
+    userId: 3, 
+    createdAt: new Date()
   }
 ];
 
@@ -175,21 +175,21 @@ export const mockSchedules = [
     stationId: 1,
     showName: "Morning Dance Party",
     description: "Wake up with energetic beats",
-    startTime: new Date("2024-03-16T08:00:00"),
-    endTime: new Date("2024-03-16T10:00:00"),
+    startTime: new Date(new Date().setHours(8, 0, 0, 0)), 
+    endTime: new Date(new Date().setHours(10, 0, 0, 0)), 
     isRecurring: true,
     recurringDays: ["Monday", "Wednesday", "Friday"],
-    createdAt: new Date("2024-03-01")
+    createdAt: new Date()
   },
   {
     id: 2,
     stationId: 2,
     showName: "Evening Chill",
     description: "Wind down with smooth tracks",
-    startTime: new Date("2024-03-16T20:00:00"),
-    endTime: new Date("2024-03-16T22:00:00"),
+    startTime: new Date(new Date().setHours(20, 0, 0, 0)), 
+    endTime: new Date(new Date().setHours(22, 0, 0, 0)), 
     isRecurring: true,
     recurringDays: ["Tuesday", "Thursday", "Sunday"],
-    createdAt: new Date("2024-03-02")
+    createdAt: new Date()
   }
 ];
