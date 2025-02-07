@@ -97,7 +97,7 @@ export const mockTransactions = [
     amount: 9.99,
     type: "subscription",
     status: "completed",
-    fromUserId: 3,
+    fromUserId: 2,
     createdAt: new Date("2024-03-14")
   },
   {
@@ -106,7 +106,7 @@ export const mockTransactions = [
     amount: 25.00,
     type: "donation",
     status: "completed",
-    fromUserId: 4,
+    fromUserId: 1,
     createdAt: new Date("2024-03-13")
   }
 ];
@@ -154,7 +154,7 @@ export const mockRadioStations = [
     streamUrl: "https://example.com/stream1",
     coverImage: "https://picsum.photos/200",
     isActive: true,
-    userId: 1, // dancequeen
+    userId: 1, 
     createdAt: new Date()
   },
   {
@@ -164,7 +164,7 @@ export const mockRadioStations = [
     streamUrl: "https://example.com/stream2",
     coverImage: "https://picsum.photos/200",
     isActive: true,
-    userId: 8, // musicpro - fixed ID
+    userId: 3, 
     createdAt: new Date()
   }
 ];
