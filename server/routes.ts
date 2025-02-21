@@ -2,9 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { 
-  insertUserSchema, 
-  insertVideoSchema, 
+import {
+  insertUserSchema,
+  insertVideoSchema,
   insertCommentSchema,
   insertFollowSchema,
   insertRadioStationSchema,
@@ -14,15 +14,17 @@ import {
   insertSubscriptionSchema,
   insertEarningsSchema
 } from "@shared/schema";
-import { 
-  mockUsers, 
-  mockVideos, 
+import {
+  mockUsers,
+  mockVideos,
   mockComments,
   mockTransactions,
   mockEarnings,
   mockRadioStations,
   mockSchedules
 } from "../client/src/lib/mock-data";
+import { createCanvas } from 'canvas';
+import { z } from 'zod';
 
 // Keep track of connected clients for each target (video/radio/live)
 const streamClients = new Map<number, Set<WebSocket>>();
@@ -135,6 +137,13 @@ async function initializeMockData() {
   }
 }
 
+const clipRequestSchema = z.object({
+  audioUrl: z.string().url(),
+  startTime: z.number(),
+  endTime: z.number(),
+  showName: z.string()
+});
+
 export function registerRoutes(app: Express): Server {
   // Initialize mock data when server starts
   initializeMockData().catch(console.error);
@@ -142,7 +151,7 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
   // Create WebSocket server
-  const wss = new WebSocketServer({ 
+  const wss = new WebSocketServer({
     server: httpServer,
     path: '/ws'
   });
@@ -441,6 +450,67 @@ export function registerRoutes(app: Express): Server {
     }
     const earnings = await storage.createEarnings(result.data);
     res.json(earnings);
+  });
+
+  app.post("/api/clips/generate", async (req, res) => {
+    const result = clipRequestSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid clip data" });
+    }
+
+    try {
+      const { audioUrl, startTime, endTime, showName } = result.data;
+
+      // Generate a simple thumbnail
+      const canvas = createCanvas(1200, 630);
+      const ctx = canvas.getContext('2d');
+
+      // Set gradient background
+      const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+      gradient.addColorStop(0, '#1a1a1a');
+      gradient.addColorStop(1, '#333333');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Add waveform visualization (simplified)
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 1200; i += 10) {
+        const height = Math.random() * 100 + 265;
+        ctx.moveTo(i, height);
+        ctx.lineTo(i, 630 - height);
+      }
+      ctx.stroke();
+
+      // Add text
+      ctx.font = 'bold 60px Arial';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText(showName, 600, 200);
+
+      ctx.font = '40px Arial';
+      const duration = Math.round(endTime - startTime);
+      ctx.fillText(`${duration} second clip`, 600, 280);
+
+      // Convert to base64
+      const thumbnailUrl = canvas.toDataURL();
+
+      // TODO: In a production environment, we would:
+      // 1. Actually process the audio clip
+      // 2. Store the thumbnail in a CDN
+      // 3. Return permanent URLs
+
+      // For demo, we'll return the same audio URL and the generated thumbnail
+      res.json({
+        clipUrl: audioUrl,
+        thumbnailUrl,
+        duration,
+      });
+    } catch (error) {
+      console.error('Error generating clip:', error);
+      res.status(500).json({ message: "Failed to generate clip" });
+    }
   });
 
   return httpServer;
