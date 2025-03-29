@@ -9,7 +9,8 @@ import {
   Radio as RadioIcon, 
   Video, 
   Users,
-  DollarSign
+  DollarSign,
+  Scissors
 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -17,6 +18,8 @@ import Profile from "@/pages/profile";
 import Live from "@/pages/live";
 import Radio from "@/pages/radio";
 import MonetizationDashboard from "@/pages/monetization";
+import ClipsPage from "@/pages/clips";
+import ClipPage from "@/pages/clip";
 import { Header } from "@/components/header";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
 
@@ -39,6 +42,12 @@ function Navigation() {
         <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
           <RadioIcon className="w-6 h-6" />
           <span>Radio</span>
+        </div>
+      </Link>
+      <Link href="/clips">
+        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
+          <Scissors className="w-6 h-6" />
+          <span>Clips</span>
         </div>
       </Link>
       <Link href="/monetization">
@@ -86,6 +95,8 @@ function Router() {
         <Route path="/live" component={Live} />
         <Route path="/radio" component={Radio} />
         <Route path="/monetization" component={MonetizationDashboard} />
+        <Route path="/clips" component={ClipsPage} />
+        <Route path="/clips/:id" component={ClipPage} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />

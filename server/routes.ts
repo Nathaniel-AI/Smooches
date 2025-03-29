@@ -12,7 +12,8 @@ import {
   insertReactionSchema,
   insertTransactionSchema,
   insertSubscriptionSchema,
-  insertEarningsSchema
+  insertEarningsSchema,
+  insertClipSchema
 } from "@shared/schema";
 import {
   mockUsers,
@@ -450,6 +451,39 @@ export function registerRoutes(app: Express): Server {
     }
     const earnings = await storage.createEarnings(result.data);
     res.json(earnings);
+  });
+
+  // Clips
+  app.get("/api/clips", async (_req, res) => {
+    const clips = await storage.getClips();
+    res.json(clips);
+  });
+
+  app.get("/api/clips/:id", async (req, res) => {
+    const clip = await storage.getClip(parseInt(req.params.id));
+    if (!clip) {
+      return res.status(404).json({ message: "Clip not found" });
+    }
+    res.json(clip);
+  });
+
+  app.get("/api/users/:id/clips", async (req, res) => {
+    const clips = await storage.getUserClips(parseInt(req.params.id));
+    res.json(clips);
+  });
+
+  app.get("/api/radio-stations/:id/clips", async (req, res) => {
+    const clips = await storage.getStationClips(parseInt(req.params.id));
+    res.json(clips);
+  });
+
+  app.post("/api/clips", async (req, res) => {
+    const result = insertClipSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid clip data" });
+    }
+    const clip = await storage.createClip(result.data);
+    res.json(clip);
   });
 
   app.post("/api/clips/generate", async (req, res) => {

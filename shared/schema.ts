@@ -103,6 +103,22 @@ export const earnings = pgTable("earnings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const clips = pgTable("clips", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  stationId: integer("station_id").references(() => radioStations.id),
+  showName: text("show_name").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  clipUrl: text("clip_url").notNull(),
+  thumbnailUrl: text("thumbnail_url").notNull(),
+  duration: integer("duration").notNull(), // duration in seconds
+  startTime: integer("start_time").notNull(), // start time in seconds
+  endTime: integer("end_time").notNull(), // end time in seconds
+  sourceUrl: text("source_url").notNull(), // original audio source
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -181,6 +197,20 @@ export const insertEarningsSchema = createInsertSchema(earnings).pick({
   month: true,
 });
 
+export const insertClipSchema = createInsertSchema(clips).pick({
+  userId: true,
+  stationId: true,
+  showName: true,
+  title: true,
+  description: true,
+  clipUrl: true,
+  thumbnailUrl: true,
+  duration: true,
+  startTime: true,
+  endTime: true,
+  sourceUrl: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
@@ -191,6 +221,7 @@ export type InsertReaction = z.infer<typeof insertReactionSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type InsertEarnings = z.infer<typeof insertEarningsSchema>;
+export type InsertClip = z.infer<typeof insertClipSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Video = typeof videos.$inferSelect;
@@ -202,3 +233,4 @@ export type Reaction = typeof reactions.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Earnings = typeof earnings.$inferSelect;
+export type Clip = typeof clips.$inferSelect;

@@ -23,12 +23,15 @@ import {
   transactions,
   subscriptions,
   earnings,
+  clips,
   type Transaction,
   type Subscription,
   type Earnings,
+  type Clip,
   type InsertTransaction,
   type InsertSubscription,
   type InsertEarnings,
+  type InsertClip,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
@@ -82,6 +85,13 @@ export interface IStorage {
   // Earnings
   getEarnings(userId: number, month?: string): Promise<Earnings[]>;
   createEarnings(earnings: InsertEarnings): Promise<Earnings>;
+  
+  // Clips
+  getClip(id: number): Promise<Clip | undefined>;
+  getClips(): Promise<Clip[]>;
+  getUserClips(userId: number): Promise<Clip[]>;
+  getStationClips(stationId: number): Promise<Clip[]>;
+  createClip(clip: InsertClip): Promise<Clip>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -363,6 +373,45 @@ export class DatabaseStorage implements IStorage {
       .values(earning)
       .returning();
     return newEarning;
+  }
+
+  async getClip(id: number): Promise<Clip | undefined> {
+    const [clip] = await db
+      .select()
+      .from(clips)
+      .where(eq(clips.id, id));
+    return clip;
+  }
+  
+  async getClips(): Promise<Clip[]> {
+    return await db
+      .select()
+      .from(clips)
+      .orderBy(sql`${clips.createdAt} DESC`);
+  }
+
+  async getUserClips(userId: number): Promise<Clip[]> {
+    return await db
+      .select()
+      .from(clips)
+      .where(eq(clips.userId, userId))
+      .orderBy(sql`${clips.createdAt} DESC`);
+  }
+
+  async getStationClips(stationId: number): Promise<Clip[]> {
+    return await db
+      .select()
+      .from(clips)
+      .where(eq(clips.stationId, stationId))
+      .orderBy(sql`${clips.createdAt} DESC`);
+  }
+
+  async createClip(clip: InsertClip): Promise<Clip> {
+    const [newClip] = await db
+      .insert(clips)
+      .values(clip)
+      .returning();
+    return newClip;
   }
 }
 

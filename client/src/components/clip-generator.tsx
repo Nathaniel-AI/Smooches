@@ -6,20 +6,36 @@ import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Waveform, Music } from 'lucide-react';
+import { Music, Save, Share } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ClipGeneratorProps {
   audioUrl: string;
   showName: string;
+  stationId: number;
+  userId: number;
   onClipGenerated?: (clipUrl: string, thumbnailUrl: string) => void;
 }
 
-export function ClipGenerator({ audioUrl, showName, onClipGenerated }: ClipGeneratorProps) {
+export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGenerated }: ClipGeneratorProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [isSavingClip, setIsSavingClip] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [clipTitle, setClipTitle] = useState("");
+  const [clipDescription, setClipDescription] = useState("");
+  const [generatedClip, setGeneratedClip] = useState<{
+    clipUrl: string;
+    thumbnailUrl: string;
+    duration: number;
+    startTime: number;
+    endTime: number;
+  } | null>(null);
   const [previewData, setPreviewData] = useState<{
     waveform: string;
     duration: string;
@@ -102,6 +118,18 @@ export function ClipGenerator({ audioUrl, showName, onClipGenerated }: ClipGener
         showName
       });
 
+      // Store the generated clip data
+      setGeneratedClip({
+        clipUrl: response.clipUrl,
+        thumbnailUrl: response.thumbnailUrl,
+        duration: response.duration,
+        startTime: region.start,
+        endTime: region.end
+      });
+
+      // Set a default title based on the show name
+      setClipTitle(`${showName} - ${formatDuration(duration)} clip`);
+
       toast({
         title: "Success",
         description: "Preview generated successfully!",
@@ -118,6 +146,58 @@ export function ClipGenerator({ audioUrl, showName, onClipGenerated }: ClipGener
       });
     } finally {
       setIsGeneratingPreview(false);
+    }
+  };
+
+  const handleSaveClip = async () => {
+    if (!generatedClip) {
+      toast({
+        title: "Error",
+        description: "You need to generate a clip first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!clipTitle.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a title for your clip",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingClip(true);
+    try {
+      await apiRequest('POST', '/api/clips', {
+        userId,
+        stationId,
+        showName,
+        title: clipTitle,
+        description: clipDescription,
+        clipUrl: generatedClip.clipUrl,
+        thumbnailUrl: generatedClip.thumbnailUrl,
+        duration: generatedClip.duration,
+        startTime: Math.round(generatedClip.startTime),
+        endTime: Math.round(generatedClip.endTime),
+        sourceUrl: audioUrl
+      });
+
+      toast({
+        title: "Success",
+        description: "Clip saved successfully!",
+      });
+
+      setSaveDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save the clip. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingClip(false);
     }
   };
 
@@ -155,7 +235,9 @@ export function ClipGenerator({ audioUrl, showName, onClipGenerated }: ClipGener
           >
             {isGeneratingPreview ? (
               <>
-                <Waveform className="w-4 h-4 animate-pulse" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 animate-pulse">
+                  <path d="M2 14h12m-4 4h12M4 4h12" />
+                </svg>
                 Generating Preview...
               </>
             ) : (
@@ -180,11 +262,84 @@ export function ClipGenerator({ audioUrl, showName, onClipGenerated }: ClipGener
               Duration: {previewData.duration}
             </span>
           </div>
-          <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-            <Waveform className="w-12 h-12 text-muted-foreground" />
+          
+          {generatedClip && (
+            <div 
+              className="aspect-video bg-muted rounded-lg overflow-hidden relative"
+              style={{
+                backgroundImage: `url(${generatedClip.thumbnailUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            >
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16">
+                  <path d="M2 14h12m-4 4h12M4 4h12" />
+                </svg>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex space-x-2 pt-2">
+            <Button 
+              variant="outline" 
+              className="flex-1 gap-2"
+              onClick={() => setSaveDialogOpen(true)}
+            >
+              <Save className="w-4 h-4" />
+              Save Clip
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex-1 gap-2"
+            >
+              <Share className="w-4 h-4" />
+              Share
+            </Button>
           </div>
         </Card>
       )}
+      
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Save Audio Clip</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="clip-title" className="col-span-1 text-right">
+                Title
+              </label>
+              <Input
+                id="clip-title"
+                className="col-span-3"
+                value={clipTitle}
+                onChange={(e) => setClipTitle(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="clip-description" className="col-span-1 text-right">
+                Description
+              </label>
+              <Textarea
+                id="clip-description"
+                className="col-span-3"
+                value={clipDescription}
+                onChange={(e) => setClipDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleSaveClip} disabled={isSavingClip}>
+              {isSavingClip ? 'Saving...' : 'Save Clip'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
