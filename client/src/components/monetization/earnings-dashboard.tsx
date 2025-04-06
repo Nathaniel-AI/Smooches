@@ -50,8 +50,19 @@ export function EarningsDashboard() {
   });
 
   // If data is not available yet, use mock data for demonstration
-  const earningsData: Earnings[] = earnings || mockEarnings;
-  const transactionsData: Transaction[] = transactions || mockTransactions;
+  const earningsData: Earnings[] = earnings || mockEarnings.map(e => ({
+    ...e,
+    amount: e.amount.toFixed(2), // Convert number to string
+    userId: e.userId,
+    createdAt: e.createdAt
+  }));
+  const transactionsData: Transaction[] = transactions || mockTransactions.map(t => ({
+    ...t,
+    amount: t.amount.toFixed(2), // Convert number to string
+    userId: t.userId,
+    fromUserId: t.fromUserId,
+    createdAt: t.createdAt
+  }));
 
   // Calculate earnings summary
   const calculateEarningsSummary = (): EarningsSummary => {

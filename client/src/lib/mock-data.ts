@@ -179,8 +179,8 @@ export const mockClips = [
   },
   {
     id: 3,
-    userId: 3,
-    stationId: 3,
+    userId: 1, // Changed from 3 to 1 to match existing user
+    stationId: 1, // Changed to match user's station
     showName: "Creator Corner",
     title: "Finding your authentic voice as a content creator",
     description: "Why authenticity is crucial for building a loyal audience in today's crowded landscape.",
@@ -224,8 +224,8 @@ export const mockClips = [
   },
   {
     id: 6,
-    userId: 3,
-    stationId: 3,
+    userId: 2, // Changed from 3 to 2 to match existing user
+    stationId: 2, // Changed to match user's station
     showName: "Creator Corner",
     title: "Building a sustainable business model for creators",
     description: "Financial strategies for turning your passion into a profitable business.",
@@ -253,11 +253,11 @@ export const mockRadioStations = [
   {
     id: 2,
     name: "Chill Lounge",
-    description: "Relaxing beats 24/7 by Music Pro",
+    description: "Relaxing beats 24/7 by Chef Master",
     streamUrl: "https://example.com/stream2",
     coverImage: "https://picsum.photos/200",
     isActive: true,
-    userId: 3, 
+    userId: 2, // Changed from 3 to 2 to match existing user
     createdAt: new Date()
   }
 ];
