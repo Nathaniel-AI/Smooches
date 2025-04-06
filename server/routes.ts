@@ -22,7 +22,8 @@ import {
   mockTransactions,
   mockEarnings,
   mockRadioStations,
-  mockSchedules
+  mockSchedules,
+  mockClips
 } from "../client/src/lib/mock-data";
 import { createCanvas } from 'canvas';
 import { z } from 'zod';
@@ -132,6 +133,27 @@ async function initializeMockData() {
         type: earning.type,
         month: earning.month
       });
+    }
+
+    // Add mock clips
+    for (const clip of mockClips) {
+      // Check if the clip exists to avoid duplicates
+      const existingClips = await storage.getClips();
+      if (!existingClips.some(c => c.title === clip.title)) {
+        await storage.createClip({
+          userId: clip.userId,
+          stationId: clip.stationId,
+          showName: clip.showName,
+          title: clip.title,
+          description: clip.description || "",
+          clipUrl: clip.clipUrl,
+          thumbnailUrl: clip.thumbnailUrl,
+          duration: clip.duration,
+          startTime: clip.startTime,
+          endTime: clip.endTime,
+          sourceUrl: clip.sourceUrl
+        });
+      }
     }
   } catch (error) {
     console.error('Error initializing mock data:', error);
