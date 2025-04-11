@@ -26,24 +26,58 @@ export function ChatSidebar({ streamId, userId, username }: ChatSidebarProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const ws = new WebSocket(wsUrl);
+    // Only attempt WebSocket connection if page is not loaded in an iframe
+    if (window.top === window.self) {
+      try {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        console.log("Chat: Attempting to connect to WebSocket:", wsUrl);
+        const ws = new WebSocket(wsUrl);
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'join', streamId }));
-    };
+        ws.onopen = () => {
+          console.log("Chat: WebSocket connection established");
+          try {
+            ws.send(JSON.stringify({ type: 'join', streamId }));
+          } catch (err) {
+            console.error("Chat: Error sending join message:", err);
+          }
+        };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'chat') {
-        setMessages(prev => [...prev, data]);
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'chat') {
+              setMessages(prev => [...prev, data]);
+              setTimeout(() => {
+                scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }
+          } catch (err) {
+            console.error("Chat: Error parsing WebSocket message:", err);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error("Chat: WebSocket error:", error);
+        };
+
+        ws.onclose = (event) => {
+          console.log("Chat: WebSocket connection closed:", event.code, event.reason);
+        };
+
+        wsRef.current = ws;
+        return () => {
+          try {
+            ws.close();
+          } catch (err) {
+            console.error("Chat: Error closing WebSocket:", err);
+          }
+        };
+      } catch (error) {
+        console.error("Chat: Failed to establish WebSocket connection:", error);
       }
-    };
-
-    wsRef.current = ws;
-    return () => ws.close();
+    }
   }, [streamId]);
 
   const sendMessage = () => {
