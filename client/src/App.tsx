@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Switch, Route } from "wouter";
+import { Switch, Route, Link, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   Home as HomeIcon, 
@@ -103,9 +102,24 @@ function Router() {
     );
   }
   
+  // If not authenticated, only show the auth page to prevent WebSocket connection issues
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen">
+        <Switch>
+          <Route path="/auth" component={AuthPage} />
+          <Route>
+            <Redirect to="/auth" />
+          </Route>
+        </Switch>
+      </div>
+    );
+  }
+  
+  // If authenticated, show the full application
   return (
-    <div className={currentUser ? "pb-20 pt-16" : "min-h-screen"}>
-      {currentUser && <Header />}
+    <div className="pb-20 pt-16">
+      <Header />
       <Switch>
         <ProtectedRoute path="/" component={Home} />
         <ProtectedRoute path="/profile/:id" component={Profile} />
@@ -114,7 +128,9 @@ function Router() {
         <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
         <ProtectedRoute path="/clips" component={ClipsPage} />
         <ProtectedRoute path="/clips/:id" component={ClipPage} />
-        <Route path="/auth" component={AuthPage} />
+        <Route path="/auth">
+          <Redirect to="/" />
+        </Route>
         <Route component={NotFound} />
       </Switch>
       <Navigation />
