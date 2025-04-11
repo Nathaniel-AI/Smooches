@@ -4,13 +4,15 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Home as HomeIcon, 
   Radio as RadioIcon, 
   Video, 
   Users,
   DollarSign,
-  Scissors
+  Scissors,
+  LogOut
 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -20,10 +22,20 @@ import Radio from "@/pages/radio";
 import MonetizationDashboard from "@/pages/monetization";
 import ClipsPage from "@/pages/clips";
 import ClipPage from "@/pages/clip";
+import AuthPage from "@/pages/auth-page";
 import { Header } from "@/components/header";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute, RoleProtectedRoute } from "@/lib/protected-route";
 
 function Navigation() {
+  const { user } = useAuth();
+  
+  // Only show navigation when user is logged in
+  if (!user) {
+    return null;
+  }
+  
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 px-4 flex justify-around items-center z-50">
       <Link href="/">
@@ -50,13 +62,15 @@ function Navigation() {
           <span>Clips</span>
         </div>
       </Link>
-      <Link href="/monetization">
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <DollarSign className="w-6 h-6" />
-          <span>Earnings</span>
-        </div>
-      </Link>
-      <Link href="/profile/1">
+      {(user.role === "creator" || user.role === "admin") && (
+        <Link href="/monetization">
+          <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
+            <DollarSign className="w-6 h-6" />
+            <span>Earnings</span>
+          </div>
+        </Link>
+      )}
+      <Link href={`/profile/${user.id}`}>
         <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
           <Users className="w-6 h-6" />
           <span>Profile</span>
@@ -72,13 +86,15 @@ function Router() {
     const completed = localStorage.getItem('onboardingComplete');
     return completed === null || completed !== 'true';
   });
+  const { user } = useAuth();
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('onboardingComplete', 'true');
     setShowOnboarding(false);
   };
 
-  if (showOnboarding) {
+  // Only show onboarding if user is logged in but hasn't completed onboarding
+  if (showOnboarding && user) {
     return (
       <div className="min-h-screen bg-background">
         <OnboardingWizard onComplete={handleOnboardingComplete} />
@@ -90,13 +106,14 @@ function Router() {
     <div className="pb-20 pt-16">
       <Header />
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/profile/:id" component={Profile} />
-        <Route path="/live" component={Live} />
-        <Route path="/radio" component={Radio} />
-        <Route path="/monetization" component={MonetizationDashboard} />
-        <Route path="/clips" component={ClipsPage} />
-        <Route path="/clips/:id" component={ClipPage} />
+        <ProtectedRoute path="/" component={Home} />
+        <ProtectedRoute path="/profile/:id" component={Profile} />
+        <ProtectedRoute path="/live" component={Live} />
+        <ProtectedRoute path="/radio" component={Radio} />
+        <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
+        <ProtectedRoute path="/clips" component={ClipsPage} />
+        <ProtectedRoute path="/clips/:id" component={ClipPage} />
+        <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />
@@ -107,10 +124,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="dark min-h-screen bg-background text-foreground">
-        <Router />
-        <Toaster />
-      </div>
+      <AuthProvider>
+        <div className="dark min-h-screen bg-background text-foreground">
+          <Router />
+          <Toaster />
+        </div>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
