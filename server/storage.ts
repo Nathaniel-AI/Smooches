@@ -40,7 +40,12 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  getUserByFacebookId(facebookId: string): Promise<User | undefined>;
+  getUserByTwitterId(twitterId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User>;
 
   // Videos
   getVideo(id: number): Promise<Video | undefined>;

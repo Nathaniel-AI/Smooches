@@ -5,12 +5,23 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   avatar: text("avatar"),
   bio: text("bio"),
+  role: text("role").notNull().default("listener"), // "listener", "creator", "admin"
+  isEmailVerified: boolean("is_email_verified").default(false),
+  verificationToken: text("verification_token"),
+  resetPasswordToken: text("reset_password_token"),
+  resetPasswordExpires: timestamp("reset_password_expires"),
+  googleId: text("google_id").unique(),
+  facebookId: text("facebook_id").unique(),
+  twitterId: text("twitter_id").unique(),
   followers: integer("followers").default(0),
   following: integer("following").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const videos = pgTable("videos", {
@@ -119,12 +130,25 @@ export const clips = pgTable("clips", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const sessions = pgTable("sessions", {
+  sid: text("sid").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  data: text("data").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
   displayName: true,
   avatar: true,
   bio: true,
+  role: true,
+  googleId: true,
+  facebookId: true,
+  twitterId: true,
 });
 
 export const insertVideoSchema = createInsertSchema(videos).pick({
@@ -234,3 +258,4 @@ export type Transaction = typeof transactions.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Earnings = typeof earnings.$inferSelect;
 export type Clip = typeof clips.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
