@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated, getCurrentUserId } from "./auth";
 import {
   insertUserSchema,
   insertVideoSchema,
@@ -42,6 +43,7 @@ async function initializeMockData() {
       if (!existingUser) {
         const newUser = await storage.createUser({
           username: user.username,
+          email: `${user.username}@smooches.app`,
           password: "password123",
           displayName: user.displayName,
           avatar: user.avatar,
@@ -168,6 +170,9 @@ const clipRequestSchema = z.object({
 });
 
 export function registerRoutes(app: Express): Server {
+  // Set up authentication
+  setupAuth(app);
+
   // Initialize mock data when server starts
   initializeMockData().catch(console.error);
 
