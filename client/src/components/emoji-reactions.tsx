@@ -27,27 +27,56 @@ export function EmojiReactions({ targetType, targetId }: EmojiReactionsProps) {
   });
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const socket = new WebSocket(wsUrl);
+    // Only attempt WebSocket connection if page is not loaded in an iframe
+    // This helps prevent WebSocket connection errors in certain contexts
+    if (window.top === window.self) {
+      try {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        console.log("Attempting to connect to WebSocket:", wsUrl);
+        const socket = new WebSocket(wsUrl);
 
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ 
-        type: 'join_reactions',
-        targetType,
-        targetId
-      }));
-    };
+        socket.onopen = () => {
+          console.log("WebSocket connection established");
+          socket.send(JSON.stringify({ 
+            type: 'join_reactions',
+            targetType,
+            targetId
+          }));
+        };
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'reaction') {
-        addFloatingEmoji(data.emoji);
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'reaction') {
+              addFloatingEmoji(data.emoji);
+            }
+          } catch (err) {
+            console.error("Error parsing WebSocket message:", err);
+          }
+        };
+
+        socket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+
+        socket.onclose = (event) => {
+          console.log("WebSocket connection closed:", event.code, event.reason);
+        };
+
+        setWs(socket);
+        return () => {
+          try {
+            socket.close();
+          } catch (err) {
+            console.error("Error closing WebSocket:", err);
+          }
+        };
+      } catch (error) {
+        console.error("Failed to establish WebSocket connection:", error);
       }
-    };
-
-    setWs(socket);
-    return () => socket.close();
+    }
   }, [targetType, targetId]);
 
   const addFloatingEmoji = (emoji: string) => {
