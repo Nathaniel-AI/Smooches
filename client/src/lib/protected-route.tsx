@@ -12,7 +12,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
 
   return (
     <Route path={path}>
-      {() => {
+      {(params) => {
         if (isLoading) {
           return (
             <div className="flex items-center justify-center min-h-screen">
@@ -25,7 +25,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
           return <Redirect to="/auth" />;
         }
 
-        return <Component />;
+        return <Component {...params} />;
       }}
     </Route>
   );
@@ -41,7 +41,7 @@ export function RoleProtectedRoute({ path, component: Component, role }: RolePro
 
   return (
     <Route path={path}>
-      {() => {
+      {(params) => {
         if (isLoading) {
           return (
             <div className="flex items-center justify-center min-h-screen">
@@ -63,7 +63,7 @@ export function RoleProtectedRoute({ path, component: Component, role }: RolePro
           return <Redirect to="/" />;
         }
 
-        return <Component />;
+        return <Component {...params} />;
       }}
     </Route>
   );

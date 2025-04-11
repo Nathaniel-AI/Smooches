@@ -86,7 +86,8 @@ function Router() {
     const completed = localStorage.getItem('onboardingComplete');
     return completed === null || completed !== 'true';
   });
-  const { user } = useAuth();
+  const authContext = useAuth();
+  const currentUser = authContext.user;
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('onboardingComplete', 'true');
@@ -94,17 +95,17 @@ function Router() {
   };
 
   // Only show onboarding if user is logged in but hasn't completed onboarding
-  if (showOnboarding && user) {
+  if (showOnboarding && currentUser) {
     return (
       <div className="min-h-screen bg-background">
         <OnboardingWizard onComplete={handleOnboardingComplete} />
       </div>
     );
   }
-
+  
   return (
-    <div className="pb-20 pt-16">
-      <Header />
+    <div className={currentUser ? "pb-20 pt-16" : "min-h-screen"}>
+      {currentUser && <Header />}
       <Switch>
         <ProtectedRoute path="/" component={Home} />
         <ProtectedRoute path="/profile/:id" component={Profile} />
