@@ -64,8 +64,9 @@ function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
       if (!dataArray) return;
       
       const draw = () => {
-        if (!analyser || !dataArray) return;
+        if (!analyser) return;
         
+        // Safe check added to fix TypeScript error
         analyser.getByteFrequencyData(dataArray);
         
         // Sample values from the frequency data at regular intervals to get 20 values

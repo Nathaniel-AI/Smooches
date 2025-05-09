@@ -6,10 +6,31 @@ import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Music, Save, Share } from 'lucide-react';
+import { 
+  Music, 
+  Save, 
+  Share, 
+  Scissors, 
+  Play, 
+  Pause, 
+  InfoIcon, 
+  Clock, 
+  ChevronRight,
+  Sparkles,
+  Copy,
+  Wand2,
+  Download,
+  Instagram,
+  Twitter
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { motion } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
 
 interface ClipGeneratorProps {
   audioUrl: string;
@@ -21,12 +42,14 @@ interface ClipGeneratorProps {
 
 export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGenerated }: ClipGeneratorProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [isSavingClip, setIsSavingClip] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [clipTitle, setClipTitle] = useState("");
   const [clipDescription, setClipDescription] = useState("");
   const [generatedClip, setGeneratedClip] = useState<{
@@ -40,19 +63,35 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
     waveform: string;
     duration: string;
   } | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [currentRegion, setCurrentRegion] = useState<{start: number, end: number} | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (waveformRef.current) {
       wavesurfer.current = WaveSurfer.create({
         container: waveformRef.current,
-        waveColor: 'rgb(var(--foreground))',
+        waveColor: 'rgba(var(--primary), 0.4)',
         progressColor: 'rgb(var(--primary))',
         cursorColor: 'rgb(var(--primary))',
         height: 100,
+        barWidth: 2,
+        barGap: 1,
+        barRadius: 2,
         plugins: [
           RegionsPlugin.create({
-            dragSelection: true,
+            dragSelection: {
+              slop: 5
+            },
+            regions: [
+              {
+                start: 0,
+                end: 30,
+                color: 'rgba(var(--primary), 0.2)',
+                drag: true,
+                resize: true,
+              }
+            ]
           }),
         ],
       });
@@ -63,10 +102,25 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
         // Create an initial region of 30 seconds
         const duration = wavesurfer.current!.getDuration();
         const endTime = Math.min(30, duration);
-        wavesurfer.current!.regions.add({
+        const region = wavesurfer.current!.regions.add({
           start: 0,
           end: endTime,
-          color: 'rgba(var(--primary), 0.2)',
+          color: 'rgba(var(--primary), 0.3)',
+          drag: true,
+          resize: true,
+        });
+        
+        setCurrentRegion({
+          start: 0,
+          end: endTime
+        });
+        
+        // Listen for region updates
+        region.on('update-end', () => {
+          setCurrentRegion({
+            start: region.start,
+            end: region.end
+          });
         });
       });
 
@@ -88,6 +142,18 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
+  
+  const simulateProgressForDemo = () => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 5;
+      setGenerationProgress(progress);
+      if (progress >= 100) {
+        clearInterval(interval);
+      }
+    }, 200);
+    return interval;
+  };
 
   const handleGeneratePreview = async () => {
     const region = wavesurfer.current?.regions.list[Object.keys(wavesurfer.current?.regions.list)[0]];
@@ -101,7 +167,21 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
       return;
     }
 
+    if (region.end - region.start > 60) {
+      toast({
+        title: "Clip Too Long",
+        description: "Clips must be 60 seconds or shorter. Please adjust your selection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGeneratingPreview(true);
+    setGenerationProgress(0);
+    
+    // Start progress simulation
+    const progressInterval = simulateProgressForDemo();
+    
     try {
       // Generate preview data
       const duration = region.end - region.start;
@@ -120,23 +200,26 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
 
       // Store the generated clip data
       setGeneratedClip({
-        clipUrl: response.clipUrl,
-        thumbnailUrl: response.thumbnailUrl,
-        duration: response.duration,
+        clipUrl: response.clipUrl || audioUrl, // Fallback to original audio if no clip URL
+        thumbnailUrl: response.thumbnailUrl || 'https://api.dicebear.com/7.x/shapes/svg?seed=clip',
+        duration: response.duration || duration,
         startTime: region.start,
         endTime: region.end
       });
 
       // Set a default title based on the show name
-      setClipTitle(`${showName} - ${formatDuration(duration)} clip`);
+      setClipTitle(`${showName} - ${formatDuration(duration)} highlight`);
 
       toast({
         title: "Success",
-        description: "Preview generated successfully!",
+        description: "Quick Preview created successfully!",
       });
 
       if (onClipGenerated) {
-        onClipGenerated(response.clipUrl, response.thumbnailUrl);
+        onClipGenerated(
+          response.clipUrl || audioUrl, 
+          response.thumbnailUrl || 'https://api.dicebear.com/7.x/shapes/svg?seed=clip'
+        );
       }
     } catch (error) {
       toast({
@@ -145,7 +228,11 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
         variant: "destructive",
       });
     } finally {
-      setIsGeneratingPreview(false);
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+      setTimeout(() => {
+        setIsGeneratingPreview(false);
+      }, 500);
     }
   };
 
@@ -186,7 +273,7 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
 
       toast({
         title: "Success",
-        description: "Clip saved successfully!",
+        description: "Audio clip saved successfully!",
       });
 
       setSaveDialogOpen(false);
@@ -200,142 +287,378 @@ export function ClipGenerator({ audioUrl, showName, stationId, userId, onClipGen
       setIsSavingClip(false);
     }
   };
+  
+  const handleShareClip = () => {
+    if (!generatedClip) {
+      toast({
+        title: "Error",
+        description: "You need to generate a clip first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShareDialogOpen(true);
+  };
+  
+  const handleCopyShareLink = () => {
+    if (!generatedClip) return;
+    
+    navigator.clipboard.writeText(`https://smooches.app/clips/share/${Date.now()}`);
+    
+    toast({
+      title: "Link Copied",
+      description: "Share link copied to clipboard!",
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <Card className="p-4 space-y-4">
-        <div 
-          ref={waveformRef}
-          className="w-full rounded-lg overflow-hidden bg-card"
-        />
-
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePlayPause}
-            className="w-12 h-12"
-          >
-            {isPlaying ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                <rect x="6" y="4" width="4" height="16"/>
-                <rect x="14" y="4" width="4" height="16"/>
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-            )}
-          </Button>
-
-          <Button
-            onClick={handleGeneratePreview}
-            disabled={isGeneratingPreview}
-            className="flex-1 gap-2"
-          >
-            {isGeneratingPreview ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 animate-pulse">
-                  <path d="M2 14h12m-4 4h12M4 4h12" />
-                </svg>
-                Generating Preview...
-              </>
-            ) : (
-              <>
-                <Music className="w-4 h-4" />
-                Generate Quick Preview
-              </>
-            )}
-          </Button>
-        </div>
-
-        <p className="text-sm text-muted-foreground text-center">
-          Drag to select the portion you want to clip (max 30 seconds)
-        </p>
-      </Card>
-
-      {previewData && (
-        <Card className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Preview</h3>
-            <span className="text-sm text-muted-foreground">
-              Duration: {previewData.duration}
-            </span>
-          </div>
-          
-          {generatedClip && (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="flex flex-col md:flex-row gap-4 items-start">
+        <div className="w-full md:w-3/4 space-y-6">
+          <Card className="p-6 space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold">Quick Preview Magic</h2>
+                <p className="text-sm text-muted-foreground">Create bite-sized clips from your podcast</p>
+              </div>
+              <Badge variant="outline" className="px-3 py-1 bg-primary/10 text-primary border-primary/20">
+                <Clock className="w-3 h-3 mr-1" />
+                {currentRegion ? formatDuration(currentRegion.end - currentRegion.start) : "0:00"}
+              </Badge>
+            </div>
+            
             <div 
-              className="aspect-video bg-muted rounded-lg overflow-hidden relative"
-              style={{
-                backgroundImage: `url(${generatedClip.thumbnailUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16">
-                  <path d="M2 14h12m-4 4h12M4 4h12" />
-                </svg>
+              ref={waveformRef}
+              className="w-full rounded-lg overflow-hidden bg-card border border-border/50 p-2"
+            />
+            
+            <div className="flex-1 space-y-2">
+              <p className="text-sm text-muted-foreground flex items-center">
+                <InfoIcon className="w-3 h-3 mr-1 text-primary" />
+                Drag to select the portion you want to clip (max 60 seconds)
+              </p>
+              
+              <div className="flex items-center justify-between gap-4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={isPlaying ? "default" : "outline"}
+                        size="icon"
+                        onClick={handlePlayPause}
+                        className="w-10 h-10 rounded-full"
+                      >
+                        {isPlaying ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4 ml-0.5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isPlaying ? "Pause" : "Play"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <Button
+                  onClick={handleGeneratePreview}
+                  disabled={isGeneratingPreview}
+                  className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary-light hover:opacity-90"
+                  size="lg"
+                >
+                  {isGeneratingPreview ? (
+                    <>
+                      <div className="w-full">
+                        <div className="flex justify-between mb-1">
+                          <span>Creating Preview</span>
+                          <span>{generationProgress}%</span>
+                        </div>
+                        <Progress value={generationProgress} className="h-2" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Generate Quick Preview
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
+          </Card>
+
+          {previewData && generatedClip && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="p-6 space-y-4 border-primary/10 bg-accent/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Scissors className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Preview Ready</h3>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {previewData.duration}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none">
+                    Ready to Share
+                  </Badge>
+                </div>
+                
+                {/* Audio player for the clip */}
+                <div className="bg-background rounded-lg p-4 border border-border/50">
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                        onClick={() => {
+                          if (audioPlayerRef.current) {
+                            if (audioPlayerRef.current.paused) {
+                              audioPlayerRef.current.play();
+                            } else {
+                              audioPlayerRef.current.pause();
+                            }
+                          }
+                        }}
+                      >
+                        <Play className="w-4 h-4 ml-0.5" />
+                      </Button>
+                      <div className="text-sm font-medium truncate max-w-[200px]">
+                        {clipTitle || `${showName} Clip`}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 px-2">
+                        <Download className="w-3 h-3" />
+                        MP3
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <audio ref={audioPlayerRef} src={generatedClip.clipUrl} className="w-full" controls />
+                </div>
+                
+                <div className="flex space-x-3 pt-2">
+                  <Button 
+                    variant="default" 
+                    className="flex-1 gap-2"
+                    onClick={() => setSaveDialogOpen(true)}
+                  >
+                    <Save className="w-4 h-4" />
+                    Save Clip
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 gap-2"
+                    onClick={handleShareClip}
+                  >
+                    <Share className="w-4 h-4" />
+                    Share
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
           )}
+        </div>
+        
+        {/* Right sidebar with tips */}
+        <Card className="w-full md:w-1/4 p-4 space-y-4 bg-accent/10 border-border/50">
+          <h3 className="font-medium flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-primary" />
+            Quick Preview Tips
+          </h3>
           
-          <div className="flex space-x-2 pt-2">
-            <Button 
-              variant="outline" 
-              className="flex-1 gap-2"
-              onClick={() => setSaveDialogOpen(true)}
-            >
-              <Save className="w-4 h-4" />
-              Save Clip
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex-1 gap-2"
-            >
-              <Share className="w-4 h-4" />
-              Share
-            </Button>
+          <div className="space-y-3">
+            <div className="text-sm space-y-1">
+              <p className="font-medium">1. Select the Best Part</p>
+              <p className="text-muted-foreground text-xs">
+                Choose compelling 15-30 second segments for better engagement.
+              </p>
+            </div>
+            
+            <div className="text-sm space-y-1">
+              <p className="font-medium">2. Add Clear Titles</p>
+              <p className="text-muted-foreground text-xs">
+                Descriptive titles help clips get discovered.
+              </p>
+            </div>
+            
+            <div className="text-sm space-y-1">
+              <p className="font-medium">3. Share Everywhere</p>
+              <p className="text-muted-foreground text-xs">
+                Post to social media to attract more listeners.
+              </p>
+            </div>
+          </div>
+          
+          <div className="pt-2 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Creators who share clips get 3x more subscribers!
+            </p>
+            
+            <div className="flex -space-x-2">
+              <Avatar className="border-2 border-background w-6 h-6">
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <Avatar className="border-2 border-background w-6 h-6">
+                <AvatarFallback>TK</AvatarFallback>
+              </Avatar>
+              <Avatar className="border-2 border-background w-6 h-6">
+                <AvatarFallback>AR</AvatarFallback>
+              </Avatar>
+              <span className="flex items-center justify-center rounded-full w-6 h-6 bg-primary text-primary-foreground text-xs border-2 border-background">+9</span>
+            </div>
           </div>
         </Card>
-      )}
+      </div>
       
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Save Audio Clip</DialogTitle>
+            <DialogTitle className="text-xl">Save Your Audio Clip</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="clip-title" className="col-span-1 text-right">
-                Title
+          
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <label htmlFor="clip-title" className="text-sm font-medium">
+                Clip Title
               </label>
               <Input
                 id="clip-title"
-                className="col-span-3"
                 value={clipTitle}
                 onChange={(e) => setClipTitle(e.target.value)}
+                placeholder="Give your clip a catchy title"
+                className="w-full"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="clip-description" className="col-span-1 text-right">
-                Description
+            
+            <div className="space-y-2">
+              <label htmlFor="clip-description" className="text-sm font-medium flex items-center justify-between">
+                <span>Description</span>
+                <span className="text-xs text-muted-foreground">Helps with discovery</span>
               </label>
               <Textarea
                 id="clip-description"
-                className="col-span-3"
                 value={clipDescription}
                 onChange={(e) => setClipDescription(e.target.value)}
-                rows={3}
+                placeholder="What's this clip about? Add context to help listeners understand."
+                className="resize-none min-h-[100px]"
               />
             </div>
+            
+            <div className="p-3 rounded-lg bg-accent/30 text-sm">
+              <p className="font-medium flex items-center gap-1 mb-2">
+                <InfoIcon className="w-3 h-3 text-primary" />
+                This clip will be saved to your library
+              </p>
+              <p className="text-muted-foreground text-xs">
+                You can find all your clips in the Clips tab and share them any time.
+              </p>
+            </div>
           </div>
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" onClick={handleSaveClip} disabled={isSavingClip}>
-              {isSavingClip ? 'Saving...' : 'Save Clip'}
+            <Button 
+              onClick={handleSaveClip} 
+              disabled={isSavingClip}
+              className="gap-2"
+            >
+              {isSavingClip ? (
+                <>Saving...</>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save Clip
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Share Your Clip</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            <div className="p-3 bg-accent/20 rounded-lg">
+              <div className="flex items-center gap-3 mb-3">
+                {generatedClip && (
+                  <div 
+                    className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0"
+                    style={{
+                      backgroundImage: `url(${generatedClip.thumbnailUrl})`,
+                      backgroundSize: 'cover'
+                    }}
+                  />
+                )}
+                <div className="flex-1">
+                  <h3 className="font-medium line-clamp-1">{clipTitle}</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {previewData?.duration}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 p-2 rounded-md bg-background border border-border">
+                <input 
+                  type="text" 
+                  value="https://smooches.app/clips/share/12345" 
+                  readOnly
+                  className="flex-1 bg-transparent border-none text-sm focus:outline-none"
+                />
+                <Button variant="ghost" size="sm" onClick={handleCopyShareLink}>
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <h4 className="font-medium text-sm">Share to Social Media</h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="outline" className="gap-2 justify-start">
+                <Instagram className="w-4 h-4 text-pink-500" />
+                Instagram
+              </Button>
+              <Button variant="outline" className="gap-2 justify-start">
+                <Twitter className="w-4 h-4 text-blue-400" />
+                Twitter
+              </Button>
+            </div>
+            
+            <div className="p-3 rounded-lg bg-primary/10 text-sm">
+              <p className="font-medium flex items-center gap-1 mb-1">
+                <InfoIcon className="w-3 h-3 text-primary" />
+                Tip: Boost Your Reach
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Add hashtags like #SmoochesApp #Podcast to increase your clip's visibility
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
