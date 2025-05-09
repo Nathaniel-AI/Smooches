@@ -18,6 +18,9 @@ import {
   Heart, 
   Share2,
   MoreHorizontal,
+  AlertTriangle,
+  RefreshCw,
+  Redo2,
   MessageCircle,
   CalendarCheck
 } from "lucide-react";
@@ -144,17 +147,50 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
     queryKey: [`/api/radio-stations/${station.id}/schedule`],
   });
 
+  const [audioError, setAudioError] = useState<string | null>(null);
+
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100;
-      audioRef.current.src = station.streamUrl;
       
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.src = "";
-        }
-      };
+      // Reset error state when trying a new source
+      setAudioError(null);
+      
+      try {
+        // Handle stream URL validation
+        const streamUrl = station.streamUrl && station.streamUrl.trim() 
+          ? station.streamUrl 
+          : "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Fallback to a valid audio source
+          
+        audioRef.current.src = streamUrl;
+        
+        // Add event listeners for better error handling
+        const handleError = (e: ErrorEvent) => {
+          console.error("Audio playback error:", e);
+          setAudioError("Couldn't play this station. Please try again later.");
+          setIsPlaying(false);
+        };
+        
+        const handleCanPlay = () => {
+          setAudioError(null);
+        };
+        
+        audioRef.current.addEventListener('error', handleError as any);
+        audioRef.current.addEventListener('canplay', handleCanPlay);
+        
+        return () => {
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.src = "";
+            audioRef.current.removeEventListener('error', handleError as any);
+            audioRef.current.removeEventListener('canplay', handleCanPlay);
+          }
+        };
+      } catch (err) {
+        console.error("Error setting audio source:", err);
+        setAudioError("There was a problem with this audio source.");
+        return () => {};
+      }
     }
   }, [station.streamUrl]);
 
@@ -326,54 +362,120 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
           <div className="mt-6">
             <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} />
             
-            <div className="flex items-center gap-4 mt-4">
-              <audio ref={audioRef} className="hidden" />
-              
-              <Button
-                variant={isPlaying ? "default" : "outline"}
-                size="icon"
-                onClick={togglePlay}
-                className="w-12 h-12 rounded-full"
-              >
-                {isPlaying ? (
-                  <Pause className="h-6 w-6" />
-                ) : (
-                  <Play className="h-6 w-6 ml-0.5" />
-                )}
-              </Button>
-
-              <div className="flex-1 flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleVolumeChange(volume === 0 ? 80 : 0)}
-                  className="text-muted-foreground hover:text-foreground"
+            {audioError ? (
+              <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                <div className="flex items-center gap-2 text-destructive mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                    <path d="M12 9v4"></path>
+                    <path d="M12 17h.01"></path>
+                  </svg>
+                  <p className="font-medium text-sm">Audio Error</p>
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">{audioError}</p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      if (audioRef.current) {
+                        // Try a different format or source
+                        audioRef.current.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3";
+                        audioRef.current.load();
+                        togglePlay();
+                      }
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1">
+                      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                      <path d="M21 3v5h-5"></path>
+                      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                      <path d="M8 16H3v5"></path>
+                    </svg>
+                    Try Different Source
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      if (audioRef.current) {
+                        // Retry current source
+                        audioRef.current.load();
+                        setAudioError(null);
+                      }
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1">
+                      <path d="M21 7v6h-6"></path>
+                      <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+                    </svg>
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mt-4">
+                <audio 
+                  ref={audioRef} 
+                  className="hidden"
+                  // Add multiple sources for better compatibility
+                  // This helps prevent "no supported source" errors
                 >
-                  {volume === 0 ? (
-                    <VolumeX className="h-5 w-5" />
+                  <source src={station.streamUrl} type="audio/mpeg" />
+                  <source src={station.streamUrl} type="audio/mp4" />
+                  <source src={station.streamUrl} type="audio/aac" />
+                  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg" />
+                </audio>
+                
+                <Button
+                  variant={isPlaying ? "default" : "outline"}
+                  size="icon"
+                  onClick={togglePlay}
+                  className="w-12 h-12 rounded-full"
+                  disabled={!!audioError}
+                >
+                  {isPlaying ? (
+                    <Pause className="h-6 w-6" />
                   ) : (
-                    <Volume2 className="h-5 w-5" />
+                    <Play className="h-6 w-6 ml-0.5" />
                   )}
                 </Button>
+
+                <div className="flex-1 flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleVolumeChange(volume === 0 ? 80 : 0)}
+                    className="text-muted-foreground hover:text-foreground"
+                    disabled={!!audioError}
+                  >
+                    {volume === 0 ? (
+                      <VolumeX className="h-5 w-5" />
+                    ) : (
+                      <Volume2 className="h-5 w-5" />
+                    )}
+                  </Button>
+                  
+                  <Slider
+                    value={[volume]}
+                    onValueChange={(values) => handleVolumeChange(values[0])}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                    disabled={!!audioError}
+                  />
+                </div>
                 
-                <Slider
-                  value={[volume]}
-                  onValueChange={(values) => handleVolumeChange(values[0])}
-                  max={100}
-                  step={1}
-                  className="flex-1"
-                />
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="rounded-full border"
+                  onClick={() => setShowChat(!showChat)}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </Button>
               </div>
-              
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="rounded-full border"
-                onClick={() => setShowChat(!showChat)}
-              >
-                <MessageCircle className="w-5 h-5" />
-              </Button>
-            </div>
+            )}
           </div>
           
           {/* Upcoming shows */}
