@@ -130,13 +130,7 @@ export const clips = pgTable("clips", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const sessions = pgTable("sessions", {
-  sid: text("sid").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  data: text("data").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// Sessions table is created manually in auth.ts with the schema expected by connect-pg-simple
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -262,4 +256,3 @@ export type Transaction = typeof transactions.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Earnings = typeof earnings.$inferSelect;
 export type Clip = typeof clips.$inferSelect;
-export type Session = typeof sessions.$inferSelect;

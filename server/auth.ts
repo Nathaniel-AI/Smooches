@@ -39,10 +39,20 @@ export function setupAuth(app: Express) {
   
   // Set up session store with PostgreSQL
   const PgSession = connectPgSimple(session);
+  
+  // Create the sessions table manually with the correct schema if needed
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS "session" (
+      "sid" varchar NOT NULL COLLATE "default",
+      "sess" json NOT NULL,
+      "expire" timestamp(6) NOT NULL,
+      CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+    )
+  `).catch(err => console.error('Error creating session table:', err));
+  
   const sessionStore = new PgSession({
     pool,
-    tableName: 'sessions',
-    createTableIfMissing: true,
+    tableName: 'session', // use "session" not "sessions"
   });
 
   const sessionSettings: session.SessionOptions = {
