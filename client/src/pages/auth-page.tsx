@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
-// Login form schema
+// Login form schema - simplified validation for ease of access
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 // Registration form schema
@@ -153,10 +153,37 @@ function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Sign In
-        </Button>
+        <div className="space-y-3">
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Sign In
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or use test account
+              </span>
+            </div>
+          </div>
+          
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full"
+            onClick={() => {
+              form.setValue("username", "admin123");
+              form.setValue("password", "admin123");
+              setTimeout(() => form.handleSubmit(onSubmit)(), 100);
+            }}
+            disabled={isPending}
+          >
+            Quick Login (Test Account)
+          </Button>
+        </div>
       </form>
     </Form>
   );

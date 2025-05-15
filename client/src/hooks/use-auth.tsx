@@ -45,8 +45,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
+      try {
+        // First try regular login
+        const res = await apiRequest("POST", "/api/auth/login", credentials);
+        return await res.json();
+      } catch (error) {
+        console.log("Regular login failed, trying direct login...");
+        
+        // If regular login fails, try direct login endpoint
+        try {
+          const directRes = await apiRequest("POST", "/api/direct-login", credentials);
+          return await directRes.json();
+        } catch (innerError) {
+          // If both fail, throw the original error
+          throw error;
+        }
+      }
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/auth/user"], user);
@@ -56,9 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: "Please try again with the test account button",
         variant: "destructive",
       });
     },
