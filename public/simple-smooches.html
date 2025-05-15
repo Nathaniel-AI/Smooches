@@ -132,6 +132,17 @@
       color: white;
       margin-top: 10px;
     }
+    .back-button {
+      display: block;
+      margin: 2rem auto;
+      padding: 0.5rem 1rem;
+      background-color: #1f2937;
+      color: white;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      text-align: center;
+      width: fit-content;
+    }
   </style>
 </head>
 <body>
@@ -143,11 +154,12 @@
     // Simple state management
     let state = {
       user: null,
+      activeTab: "feed",
       videos: [
         { 
           id: 1, 
           username: "Kiki", 
-          videoUrl: "https://cdn.ebaumsworld.com/mediaFiles/video/2198054/82679290.mp4", 
+          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", 
           caption: "🔥 Morning vibes!",
           likes: 423,
           comments: 12,
@@ -155,7 +167,7 @@
         { 
           id: 2, 
           username: "Lash", 
-          videoUrl: "https://cdn.ebaumsworld.com/mediaFiles/video/2198054/82679290.mp4", 
+          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", 
           caption: "Manifesting chaos 💅",
           likes: 891,
           comments: 43,
@@ -163,7 +175,7 @@
         { 
           id: 3, 
           username: "Big Tank", 
-          videoUrl: "https://cdn.ebaumsworld.com/mediaFiles/video/2198054/82679290.mp4", 
+          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", 
           caption: "Late-night rants incoming.",
           likes: 202,
           comments: 18,
@@ -188,22 +200,19 @@
             <input type="text" id="username" placeholder="Enter your username" required>
             <button type="submit">Sign In</button>
           </form>
+          <div style="margin-top: 20px">
+            <a href="/working-index.html" class="back-button">Back to Demos</a>
+          </div>
         </div>
       `;
     }
 
-    function renderFeed() {
+    function renderFeedPage() {
       return `
-        <header>
-          <h1>SMOOCHES</h1>
-        </header>
-        <div class="container">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div class="feed-tabs">
-              <button class="tab active">For You</button>
-              <button class="tab">Following</button>
-            </div>
-            <button class="logout-btn" id="logout-btn">Logout</button>
+        <div>
+          <div class="feed-tabs">
+            <button class="tab active">For You</button>
+            <button class="tab">Following</button>
           </div>
           <div id="video-feed">
             ${state.videos.map(video => renderVideoCard(video)).join('')}
@@ -212,11 +221,28 @@
       `;
     }
 
+    function renderLivePage() {
+      return `
+        <div style="background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="margin-bottom: 10px;">🔴 Live Smooches</h2>
+          <iframe
+            style="width: 100%; height: 300px; border-radius: 8px; border: none;"
+            src="https://www.youtube.com/embed/5qap5aO4i9A"
+            title="Live Stream"
+            allowfullscreen
+          ></iframe>
+          <p style="margin-top: 10px; font-size: 14px; color: #666;">
+            Live stream is powered via external service.
+          </p>
+        </div>
+      `;
+    }
+
     function renderVideoCard(video) {
       const isLiked = state.likedVideos.includes(video.id);
       return `
         <div class="video-card" data-id="${video.id}">
-          <video class="video" src="${video.videoUrl}" poster="https://placehold.co/600x400/black/white?text=Loading+Video..." controls></video>
+          <video class="video" src="${video.videoUrl}" poster="https://picsum.photos/seed/${video.id}/600/400" controls></video>
           <div class="video-info">
             <div class="user-info">
               <div class="avatar">${video.username.charAt(0)}</div>
@@ -224,7 +250,7 @@
             </div>
             <div class="caption">${video.caption}</div>
             <div class="actions">
-              <div class="action like-btn" data-id="${video.id}">
+              <div class="action like-btn" data-id="${video.id}" style="${isLiked ? 'color: #ec4899;' : ''}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
@@ -252,76 +278,125 @@
       `;
     }
 
-    // Event handlers
-    function setupEventListeners() {
-      const appElement = document.getElementById('app');
-      
-      // Login form
-      if (!state.user) {
-        const form = document.getElementById('login-form');
-        if (form) {
-          form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            if (username) {
-              state.user = { username };
-              localStorage.setItem('smooches_user', JSON.stringify(state.user));
-              renderApp();
-            }
-          });
-        }
-      }
-      
-      // Logout button
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-          state.user = null;
-          localStorage.removeItem('smooches_user');
-          renderApp();
-        });
-      }
-      
-      // Like buttons
-      const likeButtons = document.querySelectorAll('.like-btn');
-      likeButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const videoId = parseInt(btn.getAttribute('data-id'));
-          if (state.likedVideos.includes(videoId)) {
-            state.likedVideos = state.likedVideos.filter(id => id !== videoId);
-            state.videos = state.videos.map(v => {
-              if (v.id === videoId) {
-                return {...v, likes: v.likes - 1};
-              }
-              return v;
-            });
-          } else {
-            state.likedVideos.push(videoId);
-            state.videos = state.videos.map(v => {
-              if (v.id === videoId) {
-                return {...v, likes: v.likes + 1};
-              }
-              return v;
-            });
+    function renderHomePage() {
+      return `
+        <div style="padding: 20px; text-align: center;">
+          <h2 style="font-size: 24px; margin-bottom: 15px;">Welcome, ${state.user.username} 💋</h2>
+          <div style="margin-bottom: 20px;">
+            <button class="tab ${state.activeTab === 'feed' ? 'active' : ''}" onclick="setActiveTab('feed')">Feed</button>
+            <button class="tab ${state.activeTab === 'live' ? 'active' : ''}" onclick="setActiveTab('live')">Live</button>
+          </div>
+          <button class="logout-btn" onclick="logout()">Logout</button>
+          
+          <div style="margin-top: 30px;">
+            ${state.activeTab === 'feed' ? renderFeedPage() : renderLivePage()}
+          </div>
+          
+          <div style="margin-top: 30px;">
+            <a href="/working-index.html" class="back-button">Back to Demos</a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Handle login
+    function login(username) {
+      state.user = { username };
+      localStorage.setItem('smooches_user', JSON.stringify(state.user));
+      renderApp();
+    }
+
+    // Handle logout
+    function logout() {
+      state.user = null;
+      localStorage.removeItem('smooches_user');
+      renderApp();
+    }
+
+    // Set active tab
+    function setActiveTab(tab) {
+      state.activeTab = tab;
+      renderApp();
+    }
+
+    // Handle like
+    function likeVideo(id) {
+      id = parseInt(id);
+      if (state.likedVideos.includes(id)) {
+        state.likedVideos = state.likedVideos.filter(videoId => videoId !== id);
+        state.videos = state.videos.map(video => {
+          if (video.id === id) {
+            return { ...video, likes: video.likes - 1 };
           }
-          renderApp();
+          return video;
         });
+      } else {
+        state.likedVideos.push(id);
+        state.videos = state.videos.map(video => {
+          if (video.id === id) {
+            return { ...video, likes: video.likes + 1 };
+          }
+          return video;
+        });
+      }
+      renderApp();
+    }
+
+    // Event delegation setup
+    function setupEventListeners() {
+      document.addEventListener('click', function(e) {
+        // Like button click
+        if (e.target.closest('.like-btn')) {
+          const btn = e.target.closest('.like-btn');
+          const id = btn.getAttribute('data-id');
+          likeVideo(id);
+        }
+
+        // Login form submit
+        if (e.target.closest('#login-form')) {
+          e.preventDefault();
+          const form = e.target.closest('#login-form');
+          const username = form.querySelector('#username').value;
+          if (username) {
+            login(username);
+          }
+        }
       });
     }
 
     // Render the app based on current state
     function renderApp() {
       const appElement = document.getElementById('app');
-      if (state.user) {
-        appElement.innerHTML = renderFeed();
+      
+      if (!state.user) {
+        appElement.innerHTML = `
+          <header>
+            <h1>SMOOCHES</h1>
+          </header>
+          <div class="container">
+            ${renderLoginPage()}
+          </div>
+        `;
       } else {
-        appElement.innerHTML = renderLoginPage();
+        appElement.innerHTML = `
+          <header>
+            <h1>SMOOCHES</h1>
+          </header>
+          <div class="container">
+            ${renderHomePage()}
+          </div>
+        `;
       }
-      setupEventListeners();
     }
 
-    // Initial render
+    // Initial render and event setup
     renderApp();
+    setupEventListeners();
+
+    // Expose functions to window for onclick handlers
+    window.logout = logout;
+    window.setActiveTab = setActiveTab;
+    window.likeVideo = likeVideo;
   </script>
 </body>
 </html>
