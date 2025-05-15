@@ -1,272 +1,227 @@
 import { useState } from "react";
-import { Redirect } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
-
-// Login form schema - simplified validation for ease of access
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-// Registration form schema
-const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  displayName: z.string().min(2, "Display name must be at least 2 characters"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Radio, Video, Users } from "lucide-react";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [displayName, setDisplayName] = useState<string>("");
+
   const { user, loginMutation, registerMutation } = useAuth();
 
-  // Redirect if already logged in
+  // Handle form submissions
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate({ username, password });
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    registerMutation.mutate({ username, password, email, displayName });
+  };
+
+  // Quick login for demo purposes
+  const handleQuickLogin = () => {
+    loginMutation.mutate({ username: "demo", password: "demo123" });
+  };
+
+  const [, setLocation] = useLocation();
+
+  // Redirect if user is already logged in
   if (user) {
-    return <Redirect to="/" />;
+    setLocation("/");
+    return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row items-center">
-      {/* Auth Form */}
-      <div className="flex-1 w-full max-w-md p-8">
-        <Card className="w-full shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">SMOOCHES</CardTitle>
-            <CardDescription className="text-center">
-              Sign in to your account or create a new one
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs
-              defaultValue="login"
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <LoginForm />
-              </TabsContent>
-              <TabsContent value="register">
-                <RegisterForm />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-center text-muted-foreground">
-              {activeTab === "login" ? (
-                <span>Don't have an account? <Button variant="link" className="p-0" onClick={() => setActiveTab("register")}>Sign up</Button></span>
-              ) : (
-                <span>Already have an account? <Button variant="link" className="p-0" onClick={() => setActiveTab("login")}>Sign in</Button></span>
-              )}
-            </div>
-          </CardFooter>
-        </Card>
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Left side - Auth form */}
+      <div className="flex-1 flex flex-col justify-center p-10">
+        <div className="max-w-md mx-auto w-full">
+          <h1 className="text-3xl font-bold mb-2">Welcome to Smooches</h1>
+          <p className="text-muted-foreground mb-8">
+            Your platform for interactive audio streaming and content creation
+          </p>
+
+          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 mb-8">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <Card className="p-6">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium mb-1">
+                      Username
+                    </label>
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter your username"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium mb-1">
+                      Password
+                    </label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                    {loginMutation.isPending ? "Logging in..." : "Login"}
+                  </Button>
+                  
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-muted"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    onClick={handleQuickLogin}
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Test Account - One Click Login
+                  </Button>
+                </form>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="register">
+              <Card className="p-6">
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div>
+                    <label htmlFor="displayName" className="block text-sm font-medium mb-1">
+                      Display Name
+                    </label>
+                    <Input
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Enter your display name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium mb-1">
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reg-username" className="block text-sm font-medium mb-1">
+                      Username
+                    </label>
+                    <Input
+                      id="reg-username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Choose a username"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reg-password" className="block text-sm font-medium mb-1">
+                      Password
+                    </label>
+                    <Input
+                      id="reg-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Choose a password"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+                    {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                  </Button>
+                </form>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
-      {/* Hero Section */}
-      <div className="flex-1 w-full bg-black text-white p-12 min-h-screen hidden md:flex flex-col items-center justify-center">
-        <div className="max-w-md">
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-transparent bg-clip-text">
-            Welcome to SMOOCHES
-          </h1>
-          <p className="text-xl mb-8">
-            Connect with creators, join interactive radio stations, and share your unique content with the world.
+      {/* Right side - Hero section */}
+      <div className="hidden md:flex flex-1 bg-gradient-to-br from-pink-500 to-purple-600 text-white">
+        <div className="p-10 flex flex-col justify-center max-w-lg mx-auto">
+          <h2 className="text-3xl font-bold mb-4">
+            Connect, Create, and Collaborate
+          </h2>
+          <p className="mb-8 text-white/80">
+            Smooches is the platform where content creators connect and collaborate
+            through interactive radio stations and social broadcasting.
           </p>
-          <ul className="space-y-4 mb-8">
-            <li className="flex items-center">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center mr-3">✓</div>
-              Host your own radio station
-            </li>
-            <li className="flex items-center">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center mr-3">✓</div>
-              Monetize your content with subscriptions
-            </li>
-            <li className="flex items-center">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center mr-3">✓</div>
-              Create bite-sized podcast clips
-            </li>
-          </ul>
+
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/10 p-2 rounded-lg">
+                <Video className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold">Video Sharing</h3>
+                <p className="text-sm text-white/80">
+                  Share your content with followers and receive feedback in real-time
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/10 p-2 rounded-lg">
+                <Radio className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold">Interactive Radio</h3>
+                <p className="text-sm text-white/80">
+                  Host your own radio station and connect with your audience
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/10 p-2 rounded-lg">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold">Creator Community</h3>
+                <p className="text-sm text-white/80">
+                  Join a thriving community of creators to collaborate and grow
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function LoginForm() {
-  const { loginMutation } = useAuth();
-  const isPending = loginMutation.isPending;
-
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
-
-  function onSubmit(values: LoginFormValues) {
-    loginMutation.mutate(values);
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username or Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your username or email" {...field} disabled={isPending} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} disabled={isPending} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="space-y-3">
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Sign In
-          </Button>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or use test account
-              </span>
-            </div>
-          </div>
-          
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full"
-            onClick={() => {
-              form.setValue("username", "admin123");
-              form.setValue("password", "admin123");
-              setTimeout(() => form.handleSubmit(onSubmit)(), 100);
-            }}
-            disabled={isPending}
-          >
-            Quick Login (Test Account)
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-}
-
-function RegisterForm() {
-  const { registerMutation } = useAuth();
-  const isPending = registerMutation.isPending;
-
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      displayName: "",
-    },
-  });
-
-  function onSubmit(values: RegisterFormValues) {
-    registerMutation.mutate(values);
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Choose a username" {...field} disabled={isPending} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display Name</FormLabel>
-              <FormControl>
-                <Input placeholder="How you'll appear to others" {...field} disabled={isPending} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="your@email.com" {...field} disabled={isPending} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} disabled={isPending} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Create Account
-        </Button>
-      </form>
-    </Form>
   );
 }
