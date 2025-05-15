@@ -26,6 +26,7 @@ import { Header } from "@/components/header";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute, RoleProtectedRoute } from "@/lib/protected-route";
+import SmoochesFeed from "@/components/SmoochesFeed";
 
 function Navigation() {
   const { user } = useAuth();
@@ -47,6 +48,12 @@ function Navigation() {
         <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
           <Video className="w-6 h-6" />
           <span>Live</span>
+        </div>
+      </Link>
+      <Link href="/feed">
+        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
+          <Users className="w-6 h-6" />
+          <span>Feed</span>
         </div>
       </Link>
       <Link href="/radio">
@@ -128,6 +135,7 @@ function Router() {
         <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
         <ProtectedRoute path="/clips" component={ClipsPage} />
         <ProtectedRoute path="/clips/:id" component={ClipPage} />
+        <ProtectedRoute path="/feed" component={() => <div className="p-4"><SmoochesFeed /></div>} />
         <Route path="/auth">
           <Redirect to="/" />
         </Route>

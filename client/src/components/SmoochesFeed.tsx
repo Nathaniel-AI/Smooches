@@ -11,7 +11,7 @@ export default function SmoochesFeed() {
     ...mockVideos.map(video => ({
       id: video.id + 100,
       user: video.userId === 1 ? "Dance Queen" : video.userId === 2 ? "Chef Master" : "Music Pro",
-      url: video.url,
+      url: video.videoUrl, // Using videoUrl from the mock data
       caption: video.title,
     })),
   ];
