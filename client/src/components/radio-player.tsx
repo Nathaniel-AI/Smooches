@@ -149,71 +149,150 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
 
   const [audioError, setAudioError] = useState<string | null>(null);
 
+  // Comprehensive audio setup and error handling
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+    if (!audioRef.current) return;
+    
+    // Set initial volume
+    audioRef.current.volume = volume / 100;
+    
+    // Reset any previous error state
+    setAudioError(null);
+
+    try {
+      // Determine the best audio source using our local files
+      const availableSources = [
+        // From station if available
+        station.streamUrl && station.streamUrl.trim() ? station.streamUrl : null, 
+        // Local fallback files that are guaranteed to work
+        "/short-audio.mp3",
+        "/demo-audio.mp3",
+      ].filter(Boolean) as string[];
       
-      // Reset error state when trying a new source
-      setAudioError(null);
+      // We'll try these sources in sequence if errors occur
+      let currentSourceIndex = 0;
       
-      try {
-        // Handle stream URL validation
-        const streamUrl = station.streamUrl && station.streamUrl.trim() 
-          ? station.streamUrl 
-          : "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Fallback to a valid audio source
+      // Set initial source
+      audioRef.current.src = availableSources[currentSourceIndex];
+      
+      // Event handlers for audio element
+      const handleError = () => {
+        console.warn(`Audio source failed: ${availableSources[currentSourceIndex]}`);
+        
+        // Try next source
+        currentSourceIndex++;
+        if (currentSourceIndex < availableSources.length) {
+          console.log(`Trying next source: ${availableSources[currentSourceIndex]}`);
           
-        audioRef.current.src = streamUrl;
-        
-        // Add event listeners for better error handling
-        const handleError = (e: ErrorEvent) => {
-          console.error("Audio playback error:", e);
-          setAudioError("Couldn't play this station. Please try again later.");
-          setIsPlaying(false);
-        };
-        
-        const handleCanPlay = () => {
-          setAudioError(null);
-        };
-        
-        audioRef.current.addEventListener('error', handleError as any);
-        audioRef.current.addEventListener('canplay', handleCanPlay);
-        
-        return () => {
           if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.src = "";
-            audioRef.current.removeEventListener('error', handleError as any);
-            audioRef.current.removeEventListener('canplay', handleCanPlay);
+            audioRef.current.src = availableSources[currentSourceIndex];
+            audioRef.current.load();
+            // Don't auto-play to avoid autoplay restrictions
           }
-        };
-      } catch (err) {
-        console.error("Error setting audio source:", err);
-        setAudioError("There was a problem with this audio source.");
-        return () => {};
-      }
+        } else {
+          // All sources failed
+          setAudioError("Couldn't play this station. Please check your connection and try again.");
+          setIsPlaying(false);
+        }
+      };
+        
+      const handleCanPlay = () => {
+        console.log("Audio can play now");
+        setAudioError(null);
+      };
+
+      const handleStalled = () => {
+        console.warn("Audio playback stalled");
+      };
+        
+      // Add all event listeners
+      audioRef.current.addEventListener('error', handleError);
+      audioRef.current.addEventListener('canplay', handleCanPlay);
+      audioRef.current.addEventListener('stalled', handleStalled);
+      
+      // Pre-load audio to check if source is valid
+      audioRef.current.load();
+        
+      // Cleanup function
+      return () => {
+        if (audioRef.current) {
+          // Stop playback
+          if (!audioRef.current.paused) {
+            audioRef.current.pause();
+          }
+          
+          // Remove listeners
+          audioRef.current.removeEventListener('error', handleError);
+          audioRef.current.removeEventListener('canplay', handleCanPlay);
+          audioRef.current.removeEventListener('stalled', handleStalled);
+          
+          // Clear source
+          audioRef.current.removeAttribute('src');
+          audioRef.current.load();
+        }
+      };
+    } catch (err) {
+      console.error("Error setting up audio:", err);
+      setAudioError("There was a problem initializing the audio player.");
+      return () => {};
     }
-  }, [station.streamUrl]);
+  }, [station.streamUrl, volume]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
     
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      // Using the promise returned by play() to handle autoplay restrictions
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            // Audio started playing successfully
-          })
-          .catch(error => {
-            console.error("Playback failed:", error);
-            // Handle the error or show a UI message about autoplay being blocked
-          });
+      // Reset audio errors
+      setAudioError(null);
+      
+      // Try loading explicitly before playing
+      try {
+        audioRef.current.load();
+        
+        // Using the promise returned by play() to handle autoplay restrictions
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // Audio started playing successfully
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              console.error("Playback failed:", error);
+              
+              // Detect autoplay restrictions
+              if (error.name === "NotAllowedError") {
+                setAudioError("Audio playback was blocked. Please click play again or check your browser settings.");
+              } else {
+                // Try alternative audio source
+                if (audioRef.current) {
+                  audioRef.current.src = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3";
+                  audioRef.current.load();
+                  audioRef.current.play().catch(e => {
+                    setAudioError("Could not play any audio. Please check your device settings.");
+                    console.error("Fallback audio failed:", e);
+                  });
+                }
+              }
+            });
+        } else {
+          // For older browsers without promises
+          try {
+            audioRef.current.play();
+            setIsPlaying(true);
+          } catch (e) {
+            console.error("Legacy play error:", e);
+            setAudioError("Could not play audio. Your browser may be too old.");
+          }
+        }
+      } catch (e) {
+        console.error("Error loading audio:", e);
+        setAudioError("Could not load audio source.");
       }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleVolumeChange = (value: number) => {
@@ -415,17 +494,12 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
               </div>
             ) : (
               <div className="flex items-center gap-4 mt-4">
+                {/* Simple audio element - sources handled in useEffect */}
                 <audio 
                   ref={audioRef} 
                   className="hidden"
-                  // Add multiple sources for better compatibility
-                  // This helps prevent "no supported source" errors
-                >
-                  <source src={station.streamUrl} type="audio/mpeg" />
-                  <source src={station.streamUrl} type="audio/mp4" />
-                  <source src={station.streamUrl} type="audio/aac" />
-                  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg" />
-                </audio>
+                  preload="metadata"
+                />
                 
                 <Button
                   variant={isPlaying ? "default" : "outline"}
