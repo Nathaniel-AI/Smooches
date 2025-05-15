@@ -28,6 +28,7 @@ import type { RadioStation, RadioSchedule } from "@shared/schema";
 import { EmojiReactions } from "./emoji-reactions";
 import { ScheduleModal } from "./radio/schedule-modal";
 import { motion, AnimatePresence } from "framer-motion";
+import Hls from "hls.js";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -149,7 +150,7 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
 
   const [audioError, setAudioError] = useState<string | null>(null);
 
-  // Comprehensive audio setup and error handling
+  // Advanced audio setup with HLS.js support
   useEffect(() => {
     if (!audioRef.current) return;
     
@@ -158,42 +159,52 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
     
     // Reset any previous error state
     setAudioError(null);
+    
+    // Keep track of HLS instance
+    let hls: Hls | null = null;
 
     try {
-      // Determine the best audio source using our local files
-      const availableSources = [
-        // From station if available
-        station.streamUrl && station.streamUrl.trim() ? station.streamUrl : null, 
-        // Local fallback files that are guaranteed to work
+      // Prioritize local audio files for guaranteed playback
+      const localAudioFiles = [
         "/short-audio.mp3",
         "/demo-audio.mp3",
-      ].filter(Boolean) as string[];
+      ];
       
-      // We'll try these sources in sequence if errors occur
-      let currentSourceIndex = 0;
-      
-      // Set initial source
-      audioRef.current.src = availableSources[currentSourceIndex];
-      
-      // Event handlers for audio element
-      const handleError = () => {
-        console.warn(`Audio source failed: ${availableSources[currentSourceIndex]}`);
+      // Initialize with station URL if available, otherwise use local files
+      const initialSource = station.streamUrl && station.streamUrl.trim() 
+        ? station.streamUrl 
+        : localAudioFiles[0];
         
-        // Try next source
-        currentSourceIndex++;
-        if (currentSourceIndex < availableSources.length) {
-          console.log(`Trying next source: ${availableSources[currentSourceIndex]}`);
-          
-          if (audioRef.current) {
-            audioRef.current.src = availableSources[currentSourceIndex];
-            audioRef.current.load();
-            // Don't auto-play to avoid autoplay restrictions
-          }
-        } else {
-          // All sources failed
-          setAudioError("Couldn't play this station. Please check your connection and try again.");
-          setIsPlaying(false);
+      // Function to destroy HLS instance if it exists
+      const destroyHls = () => {
+        if (hls) {
+          hls.destroy();
+          hls = null;
         }
+      };
+      
+      // Function to play direct mp3/audio files
+      const setupDirectAudio = (src: string) => {
+        console.log("Setting up direct audio:", src);
+        if (audioRef.current) {
+          audioRef.current.src = src;
+          audioRef.current.load();
+        }
+      };
+
+      // Function to handle fallback
+      const tryFallbackSource = () => {
+        console.log("Trying fallback audio source");
+        destroyHls(); // Clean up any HLS instance
+        
+        // Always use a local file for fallback to ensure it works
+        setupDirectAudio(localAudioFiles[0]);
+      };
+      
+      // Setup error handling for standard audio element
+      const handleError = (e: Event) => {
+        console.warn("Audio playback error:", e);
+        tryFallbackSource();
       };
         
       const handleCanPlay = () => {
@@ -201,35 +212,78 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
         setAudioError(null);
       };
 
-      const handleStalled = () => {
-        console.warn("Audio playback stalled");
-      };
+      // Try using HLS.js if the format appears to be HLS (.m3u8)
+      if (initialSource.includes('.m3u8') && Hls.isSupported()) {
+        console.log("Using HLS.js for playback");
         
-      // Add all event listeners
-      audioRef.current.addEventListener('error', handleError);
-      audioRef.current.addEventListener('canplay', handleCanPlay);
-      audioRef.current.addEventListener('stalled', handleStalled);
+        // Create HLS instance
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90
+        });
+        
+        // Bind HLS to audio element
+        hls.attachMedia(audioRef.current);
+        
+        // HLS events
+        hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+          console.log("HLS media attached");
+          hls?.loadSource(initialSource);
+        });
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log("HLS manifest parsed");
+          setAudioError(null);
+        });
+        
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          console.error("HLS error:", data);
+          
+          if (data.fatal) {
+            switch(data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.error("HLS network error - trying to recover");
+                hls?.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.error("HLS media error - trying to recover");
+                hls?.recoverMediaError();
+                break;
+              default:
+                console.error("Fatal HLS error - falling back to direct audio");
+                tryFallbackSource();
+                break;
+            }
+          }
+        });
+      } else {
+        // Use standard audio element for MP3s and other formats
+        console.log("Using standard audio playback");
+        setupDirectAudio(initialSource);
+        
+        // Add event listeners for standard audio element
+        audioRef.current.addEventListener('error', handleError);
+        audioRef.current.addEventListener('canplay', handleCanPlay);
+      }
       
-      // Pre-load audio to check if source is valid
-      audioRef.current.load();
-        
       // Cleanup function
       return () => {
+        // Remove standard audio listeners
         if (audioRef.current) {
-          // Stop playback
+          audioRef.current.removeEventListener('error', handleError);
+          audioRef.current.removeEventListener('canplay', handleCanPlay);
+          
           if (!audioRef.current.paused) {
             audioRef.current.pause();
           }
           
-          // Remove listeners
-          audioRef.current.removeEventListener('error', handleError);
-          audioRef.current.removeEventListener('canplay', handleCanPlay);
-          audioRef.current.removeEventListener('stalled', handleStalled);
-          
-          // Clear source
           audioRef.current.removeAttribute('src');
           audioRef.current.load();
         }
+        
+        // Destroy HLS instance if created
+        destroyHls();
       };
     } catch (err) {
       console.error("Error setting up audio:", err);
