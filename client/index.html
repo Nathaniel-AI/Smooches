@@ -16,21 +16,16 @@
     <div id="root"></div>
     
     <!-- Quick Access Links -->
-    <div id="quick-access" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; display: none;">
+    <div id="quick-access" style="position: fixed; top: 20px; right: 20px; z-index: 1000; display: block;">
       <a href="?simple=true" style="display: inline-block; background: #ec4899; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 10px;">
         Simple Mode
       </a>
-      <a href="/smooches-standalone.html" style="display: inline-block; background: #8b5cf6; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+      <a href="/simple-smooches.html" style="display: inline-block; background: #8b5cf6; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: bold;">
         Standalone Version
       </a>
     </div>
     
-    <script>
-      // Show quick access after 2 seconds
-      setTimeout(() => {
-        document.getElementById('quick-access').style.display = 'block';
-      }, 2000);
-    </script>
+    <!-- No need for the setTimeout since we're displaying it immediately now -->
     
     <script type="module" src="/src/main.tsx"></script>
   </body>
