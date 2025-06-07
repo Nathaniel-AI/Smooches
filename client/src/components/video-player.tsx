@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { type Video } from "@shared/schema";
 import { EmojiReactions } from "./emoji-reactions";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth-simple";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface VideoPlayerProps {

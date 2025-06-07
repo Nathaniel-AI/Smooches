@@ -30,7 +30,7 @@ import { ScheduleModal } from "./radio/schedule-modal";
 import { motion, AnimatePresence } from "framer-motion";
 import Hls from "hls.js";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth-simple";
 
 interface RadioPlayerProps {
   station: RadioStation;

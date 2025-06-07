@@ -1,11 +1,11 @@
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth-simple";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Radio, Video, Users, Award, TrendingUp } from "lucide-react";
 
 export default function HomePage() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
