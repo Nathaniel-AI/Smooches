@@ -25,9 +25,9 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Brand */}
           <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer">
-              <div className="text-4xl">💋</div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent tracking-wide">
+            <div className="flex items-center gap-4 cursor-pointer hover:scale-105 transition-transform">
+              <div className="text-7xl animate-pulse">💋</div>
+              <span className="text-5xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg">
                 SMOOCHES
               </span>
             </div>
@@ -35,34 +35,34 @@ export function Header() {
           
           {/* Main Navigation */}
           {user && (
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
               <Link href="/">
-                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
-                  <Home className="w-4 h-4" />
+                <Button variant="ghost" size="lg" className="flex items-center space-x-2 text-lg font-semibold hover:bg-orange-500/10 hover:text-orange-600 transition-colors">
+                  <Home className="w-5 h-5" />
                   <span>For You</span>
                 </Button>
               </Link>
               <Link href="/live">
-                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
-                  <Video className="w-4 h-4" />
+                <Button variant="ghost" size="lg" className="flex items-center space-x-2 text-lg font-semibold hover:bg-red-500/10 hover:text-red-600 transition-colors">
+                  <Video className="w-5 h-5" />
                   <span>Live</span>
                 </Button>
               </Link>
               <Link href="/radio">
-                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
-                  <RadioIcon className="w-4 h-4" />
+                <Button variant="ghost" size="lg" className="flex items-center space-x-2 text-lg font-semibold hover:bg-blue-500/10 hover:text-blue-600 transition-colors">
+                  <RadioIcon className="w-5 h-5" />
                   <span>Radio</span>
                 </Button>
               </Link>
               <Link href="/create">
-                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
-                  <Plus className="w-4 h-4" />
+                <Button variant="ghost" size="lg" className="flex items-center space-x-2 text-lg font-semibold hover:bg-orange-600/10 hover:text-orange-700 transition-colors">
+                  <Plus className="w-5 h-5" />
                   <span>Create</span>
                 </Button>
               </Link>
               <Link href={`/profile/${user.id}`}>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
-                  <UserCircle className="w-4 h-4" />
+                <Button variant="ghost" size="lg" className="flex items-center space-x-2 text-lg font-semibold hover:bg-purple-500/10 hover:text-purple-600 transition-colors">
+                  <UserCircle className="w-5 h-5" />
                   <span>Profile</span>
                 </Button>
               </Link>

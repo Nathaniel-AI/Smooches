@@ -58,9 +58,9 @@ export default function AuthPage() {
       {/* Left side - Auth form */}
       <div className="flex-1 flex flex-col justify-center p-10">
         <div className="max-w-md mx-auto w-full">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="text-3xl">💋</div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="text-8xl animate-pulse">💋</div>
+            <h1 className="text-6xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg">
               SMOOCHES
             </h1>
           </div>
@@ -102,8 +102,8 @@ export default function AuthPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loginLoading}>
-                    {loginLoading ? "Logging in..." : "Login"}
+                  <Button type="submit" className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 text-lg transition-all transform hover:scale-105" disabled={loginLoading}>
+                    {loginLoading ? "Logging in..." : "🚀 LOGIN"}
                   </Button>
                 </form>
                 
@@ -186,8 +186,8 @@ export default function AuthPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={registerLoading}>
-                    {registerLoading ? "Creating account..." : "Create Account"}
+                  <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 text-lg transition-all transform hover:scale-105" disabled={registerLoading}>
+                    {registerLoading ? "Creating account..." : "✨ CREATE ACCOUNT"}
                   </Button>
                 </form>
               </Card>
