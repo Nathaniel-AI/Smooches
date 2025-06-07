@@ -4,7 +4,7 @@ export const mockVideos = [
     userId: 1,
     title: "Dance Challenge",
     description: "Check out these moves! #dance #viral",
-    videoUrl: "https://example.com/video1.mp4",
+    videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
     thumbnail: "https://picsum.photos/400/600",
     likes: 1200,
     comments: 85,
@@ -16,12 +16,36 @@ export const mockVideos = [
     userId: 2,
     title: "Cooking Stream",
     description: "Making pasta from scratch! #cooking",
-    videoUrl: "https://example.com/video2.mp4",
+    videoUrl: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_2mb.mp4",
     thumbnail: "https://picsum.photos/400/600",
     likes: 450,
     comments: 32,
     isLive: true,
     createdAt: new Date("2024-03-16")
+  },
+  {
+    id: 3,
+    userId: 3,
+    title: "Music Performance",
+    description: "Live acoustic session! #music #live",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    thumbnail: "https://picsum.photos/400/600",
+    likes: 850,
+    comments: 142,
+    isLive: false,
+    createdAt: new Date("2024-03-17")
+  },
+  {
+    id: 4,
+    userId: 4,
+    title: "Tech Review",
+    description: "Latest gadget unboxing and review #tech",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    thumbnail: "https://picsum.photos/400/600",
+    likes: 624,
+    comments: 78,
+    isLive: false,
+    createdAt: new Date("2024-03-18")
   }
 ];
 

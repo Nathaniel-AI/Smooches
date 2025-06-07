@@ -44,51 +44,61 @@ interface AudioVisualizerProps {
 function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [visualValues, setVisualValues] = useState(Array(20).fill(3));
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   
   useEffect(() => {
     let animationFrameId: number;
     let analyser: AnalyserNode | null = null;
-    let audioContext: AudioContext | null = null;
-    let dataArray: Uint8Array = new Uint8Array(0); // Initialize with empty array instead of null
-    let source: MediaElementAudioSourceNode | null = null;
+    let dataArray: Uint8Array = new Uint8Array(0);
     
     if (isPlaying && audioRef.current) {
-      // Set up audio analyzer
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      source = audioContext.createMediaElementSource(audioRef.current);
-      source.connect(analyser);
-      analyser.connect(audioContext.destination);
+      // Only create audio context and source if they don't exist
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
       
-      const bufferLength = analyser.frequencyBinCount;
-      dataArray = new Uint8Array(bufferLength);
+      if (!sourceRef.current && audioRef.current) {
+        try {
+          sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+        } catch (error) {
+          // Element already connected, skip visualization
+          console.warn("Audio element already connected to another source");
+          return;
+        }
+      }
       
-      // Ensure dataArray is not null in TypeScript
-      if (!dataArray) return;
-      
-      const draw = () => {
-        if (!analyser) return;
+      if (sourceRef.current) {
+        analyser = audioContextRef.current.createAnalyser();
+        analyser.fftSize = 256;
+        sourceRef.current.connect(analyser);
+        analyser.connect(audioContextRef.current.destination);
         
-        // Safe check added to fix TypeScript error
-        analyser.getByteFrequencyData(dataArray);
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
         
-        // Sample values from the frequency data at regular intervals to get 20 values
-        const sampleSize = Math.floor(dataArray.length / 20);
-        const newVisualValues = Array(20).fill(0).map((_, i) => {
-          const startIndex = i * sampleSize;
-          const slice = dataArray.slice(startIndex, startIndex + sampleSize);
-          const average = slice.reduce((a, b) => a + b, 0) / slice.length;
+        const draw = () => {
+          if (!analyser) return;
           
-          // Normalize value between 3 and 50
-          return 3 + (average / 255) * 47;
-        });
+          analyser.getByteFrequencyData(dataArray);
+          
+          // Sample values from the frequency data at regular intervals to get 20 values
+          const sampleSize = Math.floor(dataArray.length / 20);
+          const newVisualValues = Array(20).fill(0).map((_, i) => {
+            const startIndex = i * sampleSize;
+            const slice = dataArray.slice(startIndex, startIndex + sampleSize);
+            const average = slice.reduce((a, b) => a + b, 0) / slice.length;
+            
+            // Normalize value between 3 and 50
+            return 3 + (average / 255) * 47;
+          });
+          
+          setVisualValues(newVisualValues);
+          animationFrameId = requestAnimationFrame(draw);
+        };
         
-        setVisualValues(newVisualValues);
-        animationFrameId = requestAnimationFrame(draw);
-      };
-      
-      draw();
+        draw();
+      }
     } else {
       // When not playing, animate visualizer with random values
       const simulateVisualizer = () => {
@@ -102,9 +112,6 @@ function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
     
     return () => {
       cancelAnimationFrame(animationFrameId);
-      if (source && audioContext) {
-        source.disconnect();
-      }
     };
   }, [isPlaying, audioRef]);
   
