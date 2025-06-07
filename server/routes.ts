@@ -143,14 +143,6 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Users
-  app.get("/api/users/:id", async (req, res) => {
-    const user = await storage.getUser(parseInt(req.params.id));
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(user);
-  });
-
   app.post("/api/users", async (req, res) => {
     const result = insertUserSchema.safeParse(req.body);
     if (!result.success) {
@@ -188,6 +180,17 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error fetching user:', error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.get("/api/users/:id/videos", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const videos = await storage.getUserVideos(userId);
+      res.json(videos);
+    } catch (error) {
+      console.error('Error fetching user videos:', error);
+      res.status(500).json({ message: "Failed to fetch user videos" });
     }
   });
 
