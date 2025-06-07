@@ -25,14 +25,14 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Brand */}
           <Link href="/">
-            <div className="flex items-center gap-8 cursor-pointer hover:scale-105 transition-transform">
+            <div className="flex items-center gap-16 cursor-pointer hover:scale-105 transition-transform">
               <img 
                 src="/smooches-logo.jpeg" 
                 alt="SMOOCHES" 
-                className="w-48 h-48 object-cover rounded-full animate-pulse shadow-2xl border-6 border-orange-700 hover:border-red-700 transition-colors"
+                className="w-[480px] h-[480px] object-cover rounded-full animate-pulse shadow-2xl border-12 border-orange-700 hover:border-red-700 transition-colors"
                 style={{filter: 'saturate(3) contrast(2) brightness(1.3) hue-rotate(5deg)'}}
               />
-              <span className="text-8xl font-black bg-gradient-to-r from-orange-600 via-red-600 to-blue-700 bg-clip-text text-transparent tracking-wider drop-shadow-2xl" style={{filter: 'saturate(2) contrast(1.5)'}}>
+              <span className="text-[20rem] font-black bg-gradient-to-r from-orange-600 via-red-600 to-blue-700 bg-clip-text text-transparent tracking-wider drop-shadow-2xl" style={{filter: 'saturate(2) contrast(1.5)'}}>
                 SMOOCHES
               </span>
             </div>
