@@ -166,8 +166,17 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
         className="absolute inset-0 w-full h-full object-cover"
         loop
         playsInline
+        muted
         onClick={togglePlay}
         poster={video.thumbnail || undefined}
+        onError={(e) => {
+          // Silently handle video loading errors
+          const video = e.currentTarget;
+          if (video.src && !video.src.includes('sample')) {
+            // Fallback to sample video
+            video.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+          }
+        }}
       />
 
       {/* Play button overlay */}
