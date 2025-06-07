@@ -32,8 +32,6 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState("");
   const { user } = useAuth();
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   
   // Mock comments data (would be fetched from API in production)
@@ -57,10 +55,10 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    // Set up video properties for better playback
-    videoElement.volume = volume;
-    videoElement.muted = isMuted;
+    // Set up video properties for smooth playback
     videoElement.preload = "auto";
+    videoElement.volume = 1.0;
+    videoElement.muted = false;
 
     const updateProgress = () => {
       if (videoElement.duration) {
@@ -84,34 +82,16 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
       videoElement.removeEventListener('timeupdate', updateProgress);
       videoElement.removeEventListener('loadeddata', handleLoadedData);
     };
-  }, [autoPlay, volume, isMuted]);
+  }, [autoPlay]);
 
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.volume = volume;
-        videoRef.current.muted = isMuted;
         videoRef.current.play().catch(console.error);
       }
       setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume;
-      setIsMuted(newVolume === 0);
     }
   };
 
@@ -177,21 +157,20 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
       <video
         ref={videoRef}
         src={video.videoUrl}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-contain"
         loop
         playsInline
         preload="auto"
+        controls={false}
         onClick={togglePlay}
         poster={video.thumbnail || undefined}
         onLoadedData={() => {
-          // Ensure proper volume and buffering
           if (videoRef.current) {
-            videoRef.current.volume = volume;
-            videoRef.current.muted = isMuted;
+            videoRef.current.volume = 1.0;
+            videoRef.current.muted = false;
           }
         }}
         onCanPlay={() => {
-          // Video is ready to play smoothly
           if (videoRef.current && autoPlay && !isPlaying) {
             videoRef.current.play().catch(() => {});
             setIsPlaying(true);
@@ -309,31 +288,12 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
           ></div>
         </div>
         
-        {/* Volume and controls */}
-        <div className="flex items-center justify-between mt-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="p-1 text-white"
-            onClick={toggleMute}
-          >
-            {isMuted ? '🔇' : '🔊'}
-          </Button>
-          
-          <input 
-            type="range" 
-            min="0" 
-            max="1" 
-            step="0.01"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-20 h-1 accent-primary"
-          />
-          
+        {/* Play control */}
+        <div className="flex items-center justify-center mt-3">
           <Button
             variant="ghost"
             size="sm"
-            className="p-1 text-white"
+            className="p-2 text-white bg-black/50 rounded-full"
             onClick={togglePlay}
           >
             {isPlaying ? '⏸️' : '▶️'}

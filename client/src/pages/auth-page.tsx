@@ -192,10 +192,10 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero section */}
-      <div className="hidden md:flex flex-1 bg-gradient-to-br from-pink-500 to-purple-600 text-white">
+      <div className="hidden md:flex flex-1 bg-gradient-to-br from-primary to-secondary text-white">
         <div className="p-10 flex flex-col justify-center max-w-lg mx-auto">
           <h2 className="text-3xl font-bold mb-4">
-            Connect, Create, and Collaborate
+            Stream, Share, and Succeed
           </h2>
           <p className="mb-8 text-white/80">
             Smooches is the platform where content creators connect and collaborate
