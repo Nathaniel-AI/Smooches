@@ -62,7 +62,7 @@ export default function AuthPage() {
             <img 
               src="/smooches-logo.jpeg" 
               alt="SMOOCHES" 
-              className="w-96 h-96 object-cover rounded-full animate-pulse shadow-2xl border-8 border-orange-700 hover:border-red-700 transition-colors"
+              className="w-[3840px] h-[3840px] object-cover rounded-full animate-pulse shadow-2xl border-[40px] border-orange-700 hover:border-red-700 transition-colors"
               style={{filter: 'saturate(3) contrast(2) brightness(1.3) hue-rotate(5deg)'}}
             />
             <h1 className="text-9xl font-black bg-gradient-to-r from-orange-600 via-red-600 to-blue-700 bg-clip-text text-transparent tracking-wider drop-shadow-2xl text-center animate-bounce" style={{filter: 'saturate(2) contrast(1.5)'}}>
