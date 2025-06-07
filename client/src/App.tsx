@@ -14,7 +14,7 @@ import {
   LogOut
 } from "lucide-react";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
+import HomePage from "@/pages/home-page";
 import Profile from "@/pages/profile";
 import Live from "@/pages/live";
 import Radio from "@/pages/radio";
@@ -22,6 +22,7 @@ import MonetizationDashboard from "@/pages/monetization";
 import ClipsPage from "@/pages/clips";
 import ClipPage from "@/pages/clip";
 import AuthPage from "@/pages/auth-page";
+import LandingPage from "@/pages/landing-page";
 import { Header } from "@/components/header";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
 import { AuthProvider } from "@/hooks/use-auth-simple";
@@ -109,14 +110,15 @@ function Router() {
     );
   }
   
-  // If not authenticated, only show the auth page to prevent WebSocket connection issues
+  // If not authenticated, show landing page or auth page
   if (!currentUser) {
     return (
       <div className="min-h-screen">
         <Switch>
           <Route path="/auth" component={AuthPage} />
+          <Route path="/" component={LandingPage} />
           <Route>
-            <Redirect to="/auth" />
+            <Redirect to="/" />
           </Route>
         </Switch>
       </div>
@@ -128,7 +130,7 @@ function Router() {
     <div className="pb-20 pt-16">
       <Header />
       <Switch>
-        <ProtectedRoute path="/" component={Home} />
+        <ProtectedRoute path="/" component={HomePage} />
         <ProtectedRoute path="/profile/:id" component={Profile} />
         <ProtectedRoute path="/live" component={Live} />
         <ProtectedRoute path="/radio" component={Radio} />
