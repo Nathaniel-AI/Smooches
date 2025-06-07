@@ -10,7 +10,7 @@ import {
   Video, 
   Users,
   DollarSign,
-  Scissors,
+
   LogOut
 } from "lucide-react";
 import NotFound from "@/pages/not-found";
@@ -19,8 +19,7 @@ import Profile from "@/pages/profile";
 import Live from "@/pages/live";
 import Radio from "@/pages/radio";
 import MonetizationDashboard from "@/pages/monetization";
-import ClipsPage from "@/pages/clips";
-import ClipPage from "@/pages/clip";
+
 import AuthPage from "@/pages/auth-page";
 import LandingPage from "@/pages/landing-page";
 import CreateContentPage from "@/pages/create-content";
@@ -52,22 +51,10 @@ function Navigation() {
           <span>Live</span>
         </div>
       </Link>
-      <Link href="/feed">
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <Users className="w-6 h-6" />
-          <span>Feed</span>
-        </div>
-      </Link>
       <Link href="/radio">
         <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
           <RadioIcon className="w-6 h-6" />
           <span>Radio</span>
-        </div>
-      </Link>
-      <Link href="/clips">
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <Scissors className="w-6 h-6" />
-          <span>Clips</span>
         </div>
       </Link>
       {(user.role === "creator" || user.role === "admin") && (
@@ -135,10 +122,7 @@ function Router() {
         <ProtectedRoute path="/live" component={Live} />
         <ProtectedRoute path="/radio" component={Radio} />
         <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
-        <ProtectedRoute path="/clips" component={ClipsPage} />
-        <ProtectedRoute path="/clips/:id" component={ClipPage} />
         <ProtectedRoute path="/create" component={CreateContentPage} />
-        <ProtectedRoute path="/feed" component={() => <div className="p-4"><SmoochesFeed /></div>} />
         <Route path="/auth">
           <Redirect to="/" />
         </Route>
