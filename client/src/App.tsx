@@ -30,51 +30,7 @@ import { ProtectedRoute, RoleProtectedRoute } from "@/lib/protected-route";
 import SmoochesFeed from "@/components/SmoochesFeed";
 
 function Navigation() {
-  const { user } = useAuth();
-  
-  // Only show navigation when user is logged in
-  if (!user) {
-    return null;
-  }
-  
-  return (
-    <nav className="fixed top-16 left-0 right-0 bg-card/95 backdrop-blur border-b border-border py-1 px-4 flex justify-center items-center z-40">
-      <div className="flex items-center space-x-8">
-        <Link href="/">
-          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-            <HomeIcon className="w-4 h-4" />
-            <span>For You</span>
-          </div>
-        </Link>
-        <Link href="/live">
-          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-            <Video className="w-4 h-4" />
-            <span>Live</span>
-          </div>
-        </Link>
-        <Link href="/radio">
-          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-            <RadioIcon className="w-4 h-4" />
-            <span>Radio</span>
-          </div>
-        </Link>
-        {(user.role === "creator" || user.role === "admin") && (
-          <Link href="/monetization">
-            <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-              <DollarSign className="w-4 h-4" />
-              <span>Earnings</span>
-            </div>
-          </Link>
-        )}
-        <Link href={`/profile/${user.id}`}>
-          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-            <Users className="w-4 h-4" />
-            <span>Profile</span>
-          </div>
-        </Link>
-      </div>
-    </nav>
-  );
+  return null; // Navigation now handled in header
 }
 
 function Router() {
@@ -117,7 +73,7 @@ function Router() {
   
   // If authenticated, show the full application
   return (
-    <div className="pt-24">
+    <div className="pt-16">
       <Switch>
         <ProtectedRoute path="/" component={HomePage} />
         <ProtectedRoute path="/profile/:id" component={Profile} />

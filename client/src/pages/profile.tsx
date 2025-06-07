@@ -17,7 +17,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth-simple";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Edit, Settings, Upload } from "lucide-react";
+import { Edit, Settings, Upload, Camera, X } from "lucide-react";
 import type { Video, User } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -26,12 +26,14 @@ const profileEditSchema = z.object({
   bio: z.string().optional(),
   location: z.string().optional(),
   website: z.string().url().optional().or(z.literal("")),
+  avatar: z.string().optional(),
 });
 
 export default function Profile() {
   const [, params] = useRoute("/profile/:id");
   const userId = parseInt(params?.id || "0");
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -53,8 +55,31 @@ export default function Profile() {
       bio: profileUser?.bio || "",
       location: profileUser?.location || "",
       website: profileUser?.website || "",
+      avatar: profileUser?.avatar || "",
     },
   });
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setAvatarPreview(dataUrl);
+        form.setValue("avatar", dataUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: z.infer<typeof profileEditSchema>) => {
@@ -111,6 +136,37 @@ export default function Profile() {
                   </DialogHeader>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      {/* Avatar Upload */}
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="relative">
+                          <Avatar className="w-20 h-20">
+                            <AvatarImage 
+                              src={avatarPreview || profileUser?.avatar || undefined} 
+                              alt={profileUser?.displayName || "Profile"} 
+                            />
+                            <AvatarFallback className="text-lg">
+                              {profileUser?.displayName?.charAt(0).toUpperCase() || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <label 
+                            htmlFor="avatar-upload" 
+                            className="absolute bottom-0 right-0 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-1 cursor-pointer"
+                          >
+                            <Camera className="w-3 h-3" />
+                          </label>
+                          <input
+                            id="avatar-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          Click the camera icon to change your profile picture
+                        </p>
+                      </div>
+
                       <FormField
                         control={form.control}
                         name="displayName"
