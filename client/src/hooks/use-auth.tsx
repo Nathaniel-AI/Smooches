@@ -85,39 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Combined user from both sources
   const user = localUser || apiUser;
 
-  // Enhanced login mutation that tries API-based login and falls back to direct login
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      try {
-        // Special case for instant login without API
-        if (credentials.username === "instant" || credentials.password === "instant123") {
-          // Use directLogin for immediate access without API calls
-          directLogin(credentials.username);
-          return { success: true, username: credentials.username } as any;
-        }
-        
-        // First try regular login via API
-        try {
-          const res = await apiRequest("POST", "/api/auth/login", credentials);
-          return await res.json();
-        } catch (error) {
-          console.log("Regular login failed, trying direct login API...");
-          
-          // If regular login fails, try direct login endpoint
-          try {
-            const directRes = await apiRequest("POST", "/api/direct-login", credentials);
-            return await directRes.json();
-          } catch (innerError) {
-            // If both API methods fail, use local direct login
-            console.log("All API login methods failed, using local login");
-            directLogin(credentials.username || "guest");
-            return { success: true, username: credentials.username } as any;
-          }
-        }
-      } catch (error) {
-        console.error("Complete login failure:", error);
-        throw error;
-      }
+      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      return await res.json();
     },
     onSuccess: (userResponse: any) => {
       // If not already handled by directLogin
