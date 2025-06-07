@@ -23,6 +23,7 @@ import ClipsPage from "@/pages/clips";
 import ClipPage from "@/pages/clip";
 import AuthPage from "@/pages/auth-page";
 import LandingPage from "@/pages/landing-page";
+import CreateContentPage from "@/pages/create-content";
 import { Header } from "@/components/header";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
 import { AuthProvider } from "@/hooks/use-auth-simple";
@@ -137,6 +138,7 @@ function Router() {
         <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
         <ProtectedRoute path="/clips" component={ClipsPage} />
         <ProtectedRoute path="/clips/:id" component={ClipPage} />
+        <ProtectedRoute path="/create" component={CreateContentPage} />
         <ProtectedRoute path="/feed" component={() => <div className="p-4"><SmoochesFeed /></div>} />
         <Route path="/auth">
           <Redirect to="/" />
