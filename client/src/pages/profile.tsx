@@ -32,10 +32,10 @@ const profileEditSchema = z.object({
 
 export default function Profile() {
   const [, params] = useRoute("/profile/:id");
-  const userId = parseInt(params?.id || "0");
+  const { user } = useAuth();
+  const userId = params?.id ? parseInt(params.id) : user?.id || 0;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

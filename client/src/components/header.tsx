@@ -37,28 +37,34 @@ export function Header() {
           {user && (
             <div className="flex items-center space-x-6">
               <Link href="/">
-                <div className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
                   <Home className="w-4 h-4" />
                   <span>For You</span>
-                </div>
+                </Button>
               </Link>
               <Link href="/live">
-                <div className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
                   <Video className="w-4 h-4" />
                   <span>Live</span>
-                </div>
+                </Button>
               </Link>
               <Link href="/radio">
-                <div className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
                   <RadioIcon className="w-4 h-4" />
                   <span>Radio</span>
-                </div>
+                </Button>
               </Link>
               <Link href="/create">
-                <div className="flex items-center space-x-1 px-3 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
                   <Plus className="w-4 h-4" />
                   <span>Create</span>
-                </div>
+                </Button>
+              </Link>
+              <Link href={`/profile/${user.id}`}>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+                  <UserCircle className="w-4 h-4" />
+                  <span>Profile</span>
+                </Button>
               </Link>
             </div>
           )}

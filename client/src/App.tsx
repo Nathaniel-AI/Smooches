@@ -74,21 +74,24 @@ function Router() {
   
   // If authenticated, show the full application
   return (
-    <div className="pt-16">
-      <Switch>
-        <ProtectedRoute path="/" component={HomePage} />
-        <ProtectedRoute path="/profile/:id" component={Profile} />
-        <ProtectedRoute path="/live" component={Live} />
-        <ProtectedRoute path="/radio" component={Radio} />
-        <ProtectedRoute path="/settings" component={Settings} />
-        <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
-        <ProtectedRoute path="/create" component={CreateContentPage} />
-        <Route path="/auth">
-          <Redirect to="/" />
-        </Route>
-        <Route component={NotFound} />
-      </Switch>
-      <Navigation />
+    <div>
+      <Header />
+      <div className="pt-20">
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/profile/:id" component={Profile} />
+          <Route path="/profile" component={Profile} />
+          <Route path="/live" component={Live} />
+          <Route path="/radio" component={Radio} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/monetization" component={MonetizationDashboard} />
+          <Route path="/create" component={CreateContentPage} />
+          <Route path="/auth">
+            <Redirect to="/" />
+          </Route>
+          <Route component={NotFound} />
+        </Switch>
+      </div>
     </div>
   );
 }
