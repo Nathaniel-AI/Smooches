@@ -173,78 +173,7 @@ const clipRequestSchema = z.object({
 
 export function registerRoutes(app: Express): Server {
 
-  // Registration endpoint
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const { username, email, password, displayName } = req.body;
-      
-      if (!username || !email || !password || !displayName) {
-        return res.status(400).json({ error: "All fields are required" });
-      }
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(409).json({ error: "Username already exists" });
-      }
-      
-      const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(409).json({ error: "Email already exists" });
-      }
-      
-      // Create new user
-      const newUser = await storage.createUser({
-        username,
-        email,
-        password,
-        displayName,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-        bio: `Welcome to SMOOCHES, ${displayName}!`
-      });
-      
-      // Return user without password
-      const { password: _, ...safeUser } = newUser;
-      res.status(201).json(safeUser);
-      
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ error: "Registration failed" });
-    }
-  });
-
-  // Login endpoint  
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ error: "Username and password are required" });
-      }
-      
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(401).json({ error: "Invalid username or password" });
-      }
-      
-      // For now, accept any password for demo purposes
-      // In production, you'd verify the hashed password
-      const { password: _, ...safeUser } = user;
-      res.json(safeUser);
-      
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ error: "Login failed" });
-    }
-  });
-
-  // Get current user endpoint
-  app.get('/api/auth/user', async (req, res) => {
-    // Return 401 if not authenticated - this allows proper auth flow
-    res.status(401).json({ error: "Not authenticated" });
-  });
-
-  // Set up authentication
+  // Set up authentication (this includes all auth routes)
   setupAuth(app);
 
   // Initialize mock data when server starts
