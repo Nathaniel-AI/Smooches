@@ -38,6 +38,11 @@ const clipRequestSchema = z.object({
 
 export function registerRoutes(app: Express): Server {
 
+  // Health check endpoint for AWS load balancer
+  app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+
   // Set up authentication (this includes all auth routes)
   setupAuth(app);
 
