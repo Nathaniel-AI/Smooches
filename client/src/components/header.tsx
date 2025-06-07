@@ -29,7 +29,7 @@ export function Header() {
               <img 
                 src="/smooches-logo.jpeg" 
                 alt="SMOOCHES" 
-                className="w-[480px] h-[480px] object-cover rounded-full animate-pulse shadow-2xl border-12 border-orange-700 hover:border-red-700 transition-colors"
+                className="w-[4800px] h-[4800px] object-cover rounded-full animate-pulse shadow-2xl border-[50px] border-orange-700 hover:border-red-700 transition-colors"
                 style={{filter: 'saturate(3) contrast(2) brightness(1.3) hue-rotate(5deg)'}}
               />
               <span className="text-[20rem] font-black bg-gradient-to-r from-orange-600 via-red-600 to-blue-700 bg-clip-text text-transparent tracking-wider drop-shadow-2xl" style={{filter: 'saturate(2) contrast(1.5)'}}>
