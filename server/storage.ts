@@ -389,16 +389,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEarnings(userId: number, month?: string): Promise<Earnings[]> {
-    let query = db
-      .select()
+    if (month) {
+      return await db.select()
+        .from(earnings)
+        .where(and(eq(earnings.userId, userId), eq(earnings.month, month)));
+    }
+    
+    return await db.select()
       .from(earnings)
       .where(eq(earnings.userId, userId));
-
-    if (month) {
-      query = query.where(eq(earnings.month, month));
-    }
-
-    return await query;
   }
 
   async createEarnings(earning: InsertEarnings): Promise<Earnings> {

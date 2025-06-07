@@ -16,16 +16,7 @@ import {
   insertEarningsSchema,
   insertClipSchema
 } from "@shared/schema";
-import {
-  mockUsers,
-  mockVideos,
-  mockComments,
-  mockTransactions,
-  mockEarnings,
-  mockRadioStations,
-  mockSchedules,
-  mockClips
-} from "../client/src/lib/mock-data";
+// Mock data imports removed for clean production deployment
 import { createCanvas } from 'canvas';
 import { z } from 'zod';
 
