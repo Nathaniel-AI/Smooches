@@ -54,31 +54,45 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
   ];
 
   useEffect(() => {
-    if (autoPlay && videoRef.current) {
-      videoRef.current.play().catch(console.error);
-      setIsPlaying(true);
-    }
-
     const videoElement = videoRef.current;
-    if (videoElement) {
-      const updateProgress = () => {
-        if (videoElement.duration) {
-          setProgress((videoElement.currentTime / videoElement.duration) * 100);
-        }
-      };
+    if (!videoElement) return;
 
-      videoElement.addEventListener('timeupdate', updateProgress);
-      return () => {
-        videoElement.removeEventListener('timeupdate', updateProgress);
-      };
-    }
-  }, [autoPlay]);
+    // Set up video properties for better playback
+    videoElement.volume = volume;
+    videoElement.muted = isMuted;
+    videoElement.preload = "auto";
+
+    const updateProgress = () => {
+      if (videoElement.duration) {
+        setProgress((videoElement.currentTime / videoElement.duration) * 100);
+      }
+    };
+
+    const handleLoadedData = () => {
+      if (autoPlay) {
+        videoElement.play().catch(() => {
+          // Auto-play failed, user interaction required
+        });
+        setIsPlaying(autoPlay);
+      }
+    };
+
+    videoElement.addEventListener('timeupdate', updateProgress);
+    videoElement.addEventListener('loadeddata', handleLoadedData);
+    
+    return () => {
+      videoElement.removeEventListener('timeupdate', updateProgress);
+      videoElement.removeEventListener('loadeddata', handleLoadedData);
+    };
+  }, [autoPlay, volume, isMuted]);
 
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
+        videoRef.current.volume = volume;
+        videoRef.current.muted = isMuted;
         videoRef.current.play().catch(console.error);
       }
       setIsPlaying(!isPlaying);
@@ -166,14 +180,28 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
         className="absolute inset-0 w-full h-full object-cover"
         loop
         playsInline
-        muted
+        preload="auto"
         onClick={togglePlay}
         poster={video.thumbnail || undefined}
+        onLoadedData={() => {
+          // Ensure proper volume and buffering
+          if (videoRef.current) {
+            videoRef.current.volume = volume;
+            videoRef.current.muted = isMuted;
+            // Preload more content for smoother playback
+            videoRef.current.load();
+          }
+        }}
+        onCanPlay={() => {
+          // Video is ready to play smoothly
+          if (videoRef.current && autoPlay && !isPlaying) {
+            videoRef.current.play().catch(() => {});
+            setIsPlaying(true);
+          }
+        }}
         onError={(e) => {
-          // Silently handle video loading errors
           const video = e.currentTarget;
           if (video.src && !video.src.includes('sample')) {
-            // Fallback to sample video
             video.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
           }
         }}
