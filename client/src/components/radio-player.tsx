@@ -7,6 +7,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip } from "@/components/ui/tooltip";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Volume2, 
   VolumeX, 
   Pause, 
@@ -22,7 +28,8 @@ import {
   RefreshCw,
   Redo2,
   MessageCircle,
-  CalendarCheck
+  CalendarCheck,
+  Settings
 } from "lucide-react";
 import type { RadioStation, RadioSchedule } from "@shared/schema";
 import { EmojiReactions } from "./emoji-reactions";
@@ -136,9 +143,18 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
   const [showChat, setShowChat] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [audioQuality, setAudioQuality] = useState<'low' | 'medium' | 'high' | 'lossless'>('medium');
   const audioRef = useRef<HTMLAudioElement>(null);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Audio quality options
+  const audioQualityOptions = [
+    { value: 'low', label: 'Low (64kbps)', bitrate: '64k', description: 'Data saver' },
+    { value: 'medium', label: 'Medium (128kbps)', bitrate: '128k', description: 'Balanced' },
+    { value: 'high', label: 'High (320kbps)', bitrate: '320k', description: 'Best quality' },
+    { value: 'lossless', label: 'Lossless (FLAC)', bitrate: '1411k', description: 'Studio quality' }
+  ] as const;
 
   // Mock chat messages (would come from API in production)
   const [chatMessages, setChatMessages] = useState([
@@ -283,7 +299,44 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
       setAudioError("There was a problem initializing the audio player.");
       return () => {};
     }
-  }, [station.streamUrl, volume]);
+  }, [station.streamUrl, volume, audioQuality]);
+
+  // Function to change audio quality
+  const changeAudioQuality = (quality: 'low' | 'medium' | 'high' | 'lossless') => {
+    setAudioQuality(quality);
+    
+    // If audio is currently playing, restart it with new quality
+    if (isPlaying && audioRef.current) {
+      const currentTime = audioRef.current.currentTime;
+      audioRef.current.pause();
+      
+      // Apply quality-specific settings
+      switch (quality) {
+        case 'low':
+          // Reduce audio context sample rate for lower quality
+          if (audioRef.current) {
+            audioRef.current.preload = 'none';
+          }
+          break;
+        case 'medium':
+          if (audioRef.current) {
+            audioRef.current.preload = 'metadata';
+          }
+          break;
+        case 'high':
+        case 'lossless':
+          if (audioRef.current) {
+            audioRef.current.preload = 'auto';
+          }
+          break;
+      }
+      
+      // Restart playback
+      audioRef.current.load();
+      audioRef.current.currentTime = currentTime;
+      audioRef.current.play().catch(console.error);
+    }
+  };
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -586,6 +639,42 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
                     disabled={!!audioError}
                   />
                 </div>
+                
+                {/* One-click Audio Quality Selector */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="rounded-full border"
+                      disabled={!!audioError}
+                    >
+                      <Settings className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                      Audio Quality
+                    </div>
+                    {audioQualityOptions.map((option) => (
+                      <DropdownMenuItem
+                        key={option.value}
+                        onClick={() => changeAudioQuality(option.value)}
+                        className={`flex flex-col items-start py-3 ${
+                          audioQuality === option.value ? 'bg-accent' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="font-medium">{option.label}</span>
+                          {audioQuality === option.value && (
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{option.description}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 
                 <Button 
                   variant="ghost" 
