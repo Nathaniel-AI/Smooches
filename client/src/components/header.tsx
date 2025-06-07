@@ -25,9 +25,9 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Brand */}
           <Link href="/">
-            <div className="flex items-center gap-2 cursor-pointer">
-              <div className="text-2xl">💋</div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent tracking-wide">
+            <div className="flex items-center gap-3 cursor-pointer">
+              <div className="text-4xl">💋</div>
+              <span className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent tracking-wide">
                 SMOOCHES
               </span>
             </div>

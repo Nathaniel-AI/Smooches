@@ -55,15 +55,22 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    // Set up video properties for smooth playback
-    videoElement.preload = "auto";
-    videoElement.volume = 1.0;
+    // Optimize video settings for smooth playback
+    videoElement.preload = "metadata";
+    videoElement.volume = 0.8;
     videoElement.muted = false;
+    videoElement.playsInline = true;
+    videoElement.controls = false;
 
+    // Throttle progress updates for better performance
+    let progressUpdateThrottle: NodeJS.Timeout;
     const updateProgress = () => {
-      if (videoElement.duration) {
-        setProgress((videoElement.currentTime / videoElement.duration) * 100);
-      }
+      clearTimeout(progressUpdateThrottle);
+      progressUpdateThrottle = setTimeout(() => {
+        if (videoElement.duration && videoElement.currentTime) {
+          setProgress((videoElement.currentTime / videoElement.duration) * 100);
+        }
+      }, 100);
     };
 
     const handleLoadedData = () => {
@@ -75,12 +82,20 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
       }
     };
 
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
     videoElement.addEventListener('timeupdate', updateProgress);
     videoElement.addEventListener('loadeddata', handleLoadedData);
+    videoElement.addEventListener('play', handlePlay);
+    videoElement.addEventListener('pause', handlePause);
     
     return () => {
+      clearTimeout(progressUpdateThrottle);
       videoElement.removeEventListener('timeupdate', updateProgress);
       videoElement.removeEventListener('loadeddata', handleLoadedData);
+      videoElement.removeEventListener('play', handlePlay);
+      videoElement.removeEventListener('pause', handlePause);
     };
   }, [autoPlay]);
 
