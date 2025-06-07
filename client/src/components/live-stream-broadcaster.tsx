@@ -26,7 +26,7 @@ export function LiveStreamBroadcaster() {
     const ws = new WebSocket(wsUrl);
     
     ws.onopen = () => {
-      console.log("WebSocket connection established");
+      // Connection established
     };
     
     ws.onmessage = async (event) => {
@@ -93,7 +93,7 @@ export function LiveStreamBroadcaster() {
     };
     
     ws.onclose = () => {
-      console.log("WebSocket connection closed");
+      // Connection closed
     };
     
     wsRef.current = ws;
@@ -136,6 +136,11 @@ export function LiveStreamBroadcaster() {
   // Start streaming
   const startStream = async () => {
     try {
+      // Check if media devices are available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Media devices not supported in this browser");
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true
@@ -161,10 +166,9 @@ export function LiveStreamBroadcaster() {
       // Simulate viewers for demo (in real app, this would come from the server)
       setViewerCount(Math.floor(Math.random() * 10) + 5);
     } catch (error) {
-      console.error("Error accessing media devices:", error);
       toast({
         title: "Failed to start stream",
-        description: "Could not access camera or microphone",
+        description: "Could not access camera or microphone. Please ensure permissions are granted.",
         variant: "destructive",
       });
     }
