@@ -3,7 +3,7 @@ import { Switch, Route, Link, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth-simple";
 import { 
   Home as HomeIcon, 
   Radio as RadioIcon, 
@@ -24,7 +24,7 @@ import ClipPage from "@/pages/clip";
 import AuthPage from "@/pages/auth-page";
 import { Header } from "@/components/header";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth-simple";
 import { ProtectedRoute, RoleProtectedRoute } from "@/lib/protected-route";
 import SmoochesFeed from "@/components/SmoochesFeed";
 

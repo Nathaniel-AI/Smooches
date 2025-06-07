@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth-simple";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -14,22 +14,45 @@ export default function AuthPage() {
   const [email, setEmail] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
 
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, login, register, isLoading } = useAuth();
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
 
   // Handle form submissions
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate({ username, password });
+    setLoginLoading(true);
+    try {
+      await login({ username, password });
+    } catch (error) {
+      // Error is handled by the mutation
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    registerMutation.mutate({ username, password, email, displayName });
+    setRegisterLoading(true);
+    try {
+      await register({ username, password, email, displayName });
+    } catch (error) {
+      // Error is handled by the mutation
+    } finally {
+      setRegisterLoading(false);
+    }
   };
 
   // Quick login for demo purposes
-  const handleQuickLogin = () => {
-    loginMutation.mutate({ username: "demo", password: "demo123" });
+  const handleQuickLogin = async () => {
+    setLoginLoading(true);
+    try {
+      await login({ username: "admin123", password: "password" });
+    } catch (error) {
+      // Error is handled by the mutation
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
   const [, setLocation] = useLocation();
@@ -84,8 +107,8 @@ export default function AuthPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                    {loginMutation.isPending ? "Logging in..." : "Login"}
+                  <Button type="submit" className="w-full" disabled={loginLoading}>
+                    {loginLoading ? "Logging in..." : "Login"}
                   </Button>
                   
                   <div className="relative my-4">
@@ -162,8 +185,8 @@ export default function AuthPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-                    {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                  <Button type="submit" className="w-full" disabled={registerLoading}>
+                    {registerLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
               </Card>
