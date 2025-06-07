@@ -19,6 +19,7 @@ import Profile from "@/pages/profile";
 import Live from "@/pages/live";
 import Radio from "@/pages/radio";
 import MonetizationDashboard from "@/pages/monetization";
+import Settings from "@/pages/settings";
 
 import AuthPage from "@/pages/auth-page";
 import LandingPage from "@/pages/landing-page";
@@ -79,6 +80,7 @@ function Router() {
         <ProtectedRoute path="/profile/:id" component={Profile} />
         <ProtectedRoute path="/live" component={Live} />
         <ProtectedRoute path="/radio" component={Radio} />
+        <ProtectedRoute path="/settings" component={Settings} />
         <RoleProtectedRoute path="/monetization" component={MonetizationDashboard} role="creator" />
         <ProtectedRoute path="/create" component={CreateContentPage} />
         <Route path="/auth">

@@ -201,7 +201,7 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: "Unauthorized to update this profile" });
       }
 
-      const { displayName, bio, location, website } = req.body;
+      const { displayName, bio, location, website, avatar } = req.body;
       
       // Validate required fields
       if (!displayName) {
@@ -213,6 +213,7 @@ export function registerRoutes(app: Express): Server {
         bio: bio || null,
         location: location || null,
         website: website || null,
+        avatar: avatar || null,
       });
 
       // Remove sensitive information
