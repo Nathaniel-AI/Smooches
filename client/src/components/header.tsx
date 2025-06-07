@@ -24,8 +24,8 @@ export function Header() {
       <div className="container mx-auto flex items-center justify-between">
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer">
-            <img src="/logo.jpeg" alt="SMOOCHES" className="w-8 h-8 rounded-full" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
+            <div className="text-2xl">💋</div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent tracking-wide">
               SMOOCHES
             </span>
           </div>

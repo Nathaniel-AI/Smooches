@@ -25,13 +25,11 @@ export default function LandingPage() {
       <header className="border-b bg-card/80 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            <div className="flex items-center space-x-2">
+              <div className="text-3xl">💋</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent tracking-wide">
                 SMOOCHES
               </div>
-              <Badge variant="secondary" className="bg-gradient-to-r from-primary/20 to-accent/20">
-                SOCIAL MEDIA
-              </Badge>
             </div>
             
             <div className="flex items-center space-x-3">
