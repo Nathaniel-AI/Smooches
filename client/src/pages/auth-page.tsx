@@ -58,13 +58,13 @@ export default function AuthPage() {
       {/* Left side - Auth form */}
       <div className="flex-1 flex flex-col justify-center p-10">
         <div className="max-w-md mx-auto w-full">
-          <div className="flex flex-col items-center gap-6 mb-8">
+          <div className="flex flex-col items-center gap-8 mb-12">
             <img 
               src="/smooches-logo.jpeg" 
               alt="SMOOCHES" 
-              className="w-48 h-48 object-cover rounded-full animate-pulse shadow-2xl border-8 border-orange-500"
+              className="w-96 h-96 object-cover rounded-full animate-pulse shadow-2xl border-8 border-orange-400 hover:border-red-400 transition-colors"
             />
-            <h1 className="text-7xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg text-center">
+            <h1 className="text-9xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-blue-500 bg-clip-text text-transparent tracking-wider drop-shadow-2xl text-center animate-bounce">
               SMOOCHES
             </h1>
           </div>
@@ -106,7 +106,7 @@ export default function AuthPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 text-lg transition-all transform hover:scale-105" disabled={loginLoading}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-300 hover:to-red-300 text-white font-black py-4 text-xl transition-all transform hover:scale-110 shadow-xl hover:shadow-2xl border-2 border-orange-300" disabled={loginLoading}>
                     {loginLoading ? "Logging in..." : "🚀 LOGIN"}
                   </Button>
                 </form>
@@ -190,7 +190,7 @@ export default function AuthPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 text-lg transition-all transform hover:scale-105" disabled={registerLoading}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-300 hover:to-purple-300 text-white font-black py-4 text-xl transition-all transform hover:scale-110 shadow-xl hover:shadow-2xl border-2 border-blue-300" disabled={registerLoading}>
                     {registerLoading ? "Creating account..." : "✨ CREATE ACCOUNT"}
                   </Button>
                 </form>
