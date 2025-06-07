@@ -22,8 +22,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/auth/user"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/auth/user");
+        const response = await fetch("/api/auth/user", {
+          credentials: 'include'
+        });
         if (response.status === 401) {
+          setUser(null);
           return null;
         }
         if (!response.ok) {
@@ -33,10 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData);
         return userData;
       } catch (error) {
+        setUser(null);
         return null;
       }
     },
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false
   });
 
   const loginMutation = useMutation({
