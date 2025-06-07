@@ -20,22 +20,24 @@ export default function LivePage() {
   const [selectedStream, setSelectedStream] = useState(featuredStreams[0]);
   
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">🔴 Live Smooches</h1>
-        <Button 
-          onClick={() => setActiveTab("broadcast")}
-          className="bg-red-500 hover:bg-red-600 text-white"
-        >
-          Go Live
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background p-4">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">🔴 Live Streaming</h1>
+          <Button 
+            onClick={() => setActiveTab("broadcast")}
+            className="bg-red-500 hover:bg-red-600 text-white gap-2"
+          >
+            <Play className="h-4 w-4" />
+            Go Live
+          </Button>
+        </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
-          <TabsTrigger value="watch">Watch Streams</TabsTrigger>
-          <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
-        </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-2 w-full max-w-md">
+              <TabsTrigger value="watch">Watch Streams</TabsTrigger>
+              <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
+            </TabsList>
         
         <TabsContent value="watch" className="space-y-6">
           {/* Main viewer */}
@@ -168,7 +170,8 @@ export default function LivePage() {
             </ul>
           </div>
         </TabsContent>
-      </Tabs>
+          </Tabs>
+      </div>
     </div>
   );
 }
