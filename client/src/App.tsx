@@ -128,8 +128,7 @@ function Router() {
   
   // If authenticated, show the full application
   return (
-    <div className="pb-20 pt-16">
-      <Header />
+    <div className="pb-20">
       <Switch>
         <ProtectedRoute path="/" component={HomePage} />
         <ProtectedRoute path="/profile/:id" component={Profile} />

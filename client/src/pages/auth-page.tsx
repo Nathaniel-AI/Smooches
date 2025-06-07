@@ -101,6 +101,30 @@ export default function AuthPage() {
                     {loginLoading ? "Logging in..." : "Login"}
                   </Button>
                 </form>
+                
+                {/* Quick Admin Login */}
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground mb-2 text-center">Quick Access</p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-xs"
+                    onClick={async () => {
+                      setUsername("superadmin");
+                      setPassword("admin123");
+                      setLoginLoading(true);
+                      try {
+                        await login({ username: "superadmin", password: "admin123" });
+                      } catch (error) {
+                        // Error handled by mutation
+                      } finally {
+                        setLoginLoading(false);
+                      }
+                    }}
+                    disabled={loginLoading}
+                  >
+                    Admin Login
+                  </Button>
+                </div>
               </Card>
             </TabsContent>
 
