@@ -25,9 +25,13 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Brand */}
           <Link href="/">
-            <div className="flex items-center gap-4 cursor-pointer hover:scale-105 transition-transform">
-              <div className="text-7xl animate-pulse">💋</div>
-              <span className="text-5xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg">
+            <div className="flex items-center gap-6 cursor-pointer hover:scale-105 transition-transform">
+              <img 
+                src="/smooches-logo.jpeg" 
+                alt="SMOOCHES" 
+                className="w-32 h-32 object-cover rounded-full animate-pulse shadow-lg border-4 border-orange-500"
+              />
+              <span className="text-6xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg">
                 SMOOCHES
               </span>
             </div>

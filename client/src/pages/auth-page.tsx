@@ -58,9 +58,13 @@ export default function AuthPage() {
       {/* Left side - Auth form */}
       <div className="flex-1 flex flex-col justify-center p-10">
         <div className="max-w-md mx-auto w-full">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="text-8xl animate-pulse">💋</div>
-            <h1 className="text-6xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg">
+          <div className="flex flex-col items-center gap-6 mb-8">
+            <img 
+              src="/smooches-logo.jpeg" 
+              alt="SMOOCHES" 
+              className="w-48 h-48 object-cover rounded-full animate-pulse shadow-2xl border-8 border-orange-500"
+            />
+            <h1 className="text-7xl font-black bg-gradient-to-r from-orange-500 via-red-500 to-blue-600 bg-clip-text text-transparent tracking-wider drop-shadow-lg text-center">
               SMOOCHES
             </h1>
           </div>
