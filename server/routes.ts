@@ -172,41 +172,7 @@ const clipRequestSchema = z.object({
 });
 
 export function registerRoutes(app: Express): Server {
-  // Special admin access endpoint
-  app.post('/api/direct-login', async (req, res) => {
-    try {
-      // Hardcoded credentials for direct access
-      const { username } = req.body;
-      
-      // Find any existing user or use admin123
-      const user = await storage.getUserByUsername(username) || 
-                   await storage.getUserByUsername('admin123');
-      
-      if (user) {
-        // Since req.login is not working properly, just return the user
-        // and let the frontend handle the authentication
-        const { password, ...safeUser } = user;
-        console.log("Direct login successful for:", user.username);
-        return res.status(200).json(safeUser);
-      } else {
-        // If no user exists, create a temporary one
-        const tempUser = {
-          id: 999,
-          username: username || "guest",
-          displayName: username || "Guest User",
-          email: `${username || "guest"}@smooches.app`,
-          role: "user",
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || "guest"}`,
-          followers: 0,
-          following: 0,
-        };
-        return res.status(200).json(tempUser);
-      }
-    } catch (error) {
-      console.error("Direct login error:", error);
-      return res.status(500).json({ error: "Server error" });
-    }
-  });
+
   // Registration endpoint
   app.post('/api/auth/register', async (req, res) => {
     try {

@@ -43,17 +43,7 @@ export default function AuthPage() {
     }
   };
 
-  // Quick login for demo purposes
-  const handleQuickLogin = async () => {
-    setLoginLoading(true);
-    try {
-      await login({ username: "admin123", password: "password" });
-    } catch (error) {
-      // Error is handled by the mutation
-    } finally {
-      setLoginLoading(false);
-    }
-  };
+
 
   const [, setLocation] = useLocation();
 
@@ -109,24 +99,6 @@ export default function AuthPage() {
                   </div>
                   <Button type="submit" className="w-full" disabled={loginLoading}>
                     {loginLoading ? "Logging in..." : "Login"}
-                  </Button>
-                  
-                  <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-muted"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="button" 
-                    onClick={handleQuickLogin}
-                    variant="outline" 
-                    className="w-full"
-                  >
-                    Test Account - One Click Login
                   </Button>
                 </form>
               </Card>
