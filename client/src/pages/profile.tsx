@@ -21,23 +21,180 @@ import { Edit, Settings, Upload } from "lucide-react";
 import type { Video, User } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const profileEditSchema = z.object({
+  displayName: z.string().min(1, "Display name is required"),
+  bio: z.string().optional(),
+  location: z.string().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+});
+
 export default function Profile() {
   const [, params] = useRoute("/profile/:id");
   const userId = parseInt(params?.id || "0");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: profileUser } = useQuery<User>({
+    queryKey: [`/api/users/${userId}`],
+  });
 
   const { data: videos, isLoading } = useQuery<Video[]>({
     queryKey: [`/api/users/${userId}/videos`],
   });
 
+  const isOwnProfile = user && user.id === userId;
+
+  const form = useForm<z.infer<typeof profileEditSchema>>({
+    resolver: zodResolver(profileEditSchema),
+    defaultValues: {
+      displayName: profileUser?.displayName || "",
+      bio: profileUser?.bio || "",
+      location: profileUser?.location || "",
+      website: profileUser?.website || "",
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof profileEditSchema>) => {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}`] });
+      setIsEditOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof profileEditSchema>) => {
+    updateProfileMutation.mutate(data);
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container max-w-4xl mx-auto py-8">
-        <UserProfile userId={userId} detailed />
+        <div className="flex items-center justify-between mb-6">
+          <UserProfile userId={userId} detailed />
+          {isOwnProfile && (
+            <div className="flex gap-2">
+              <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Edit className="h-4 w-4" />
+                    Edit Profile
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="displayName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Display Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Your display name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bio"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bio</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Tell us about yourself..." 
+                                className="resize-none"
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Location</FormLabel>
+                            <FormControl>
+                              <Input placeholder="City, Country" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="website"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Website</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://yourwebsite.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit"
+                          disabled={updateProfileMutation.isPending}
+                        >
+                          {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
+        </div>
 
         <Tabs defaultValue="videos" className="mt-8">
           <TabsList>
             <TabsTrigger value="videos">Videos</TabsTrigger>
             <TabsTrigger value="live">Live</TabsTrigger>
+            {isOwnProfile && <TabsTrigger value="settings">Settings</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="videos">
@@ -58,10 +215,53 @@ export default function Profile() {
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg">No videos uploaded yet</p>
                   <p className="text-sm mt-2">Start creating content to share with your audience!</p>
+                  {isOwnProfile && (
+                    <Button className="mt-4 gap-2" variant="outline">
+                      <Upload className="h-4 w-4" />
+                      Upload Video
+                    </Button>
+                  )}
                 </div>
               )}
             </ScrollArea>
           </TabsContent>
+
+          <TabsContent value="live">
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-lg">Live streaming coming soon</p>
+              <p className="text-sm mt-2">Set up your live streaming schedule and go live!</p>
+            </div>
+          </TabsContent>
+
+          {isOwnProfile && (
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Privacy Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Manage who can see your content and interact with you
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Notification Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Control what notifications you receive
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Creator Tools</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Access analytics, monetization, and creator features
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="live">
             <div className="text-center py-8 text-muted-foreground">

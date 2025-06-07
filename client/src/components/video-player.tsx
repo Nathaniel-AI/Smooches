@@ -188,8 +188,6 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
           if (videoRef.current) {
             videoRef.current.volume = volume;
             videoRef.current.muted = isMuted;
-            // Preload more content for smoother playback
-            videoRef.current.load();
           }
         }}
         onCanPlay={() => {

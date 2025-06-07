@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   displayName: text("display_name").notNull(),
   avatar: text("avatar"),
   bio: text("bio"),
+  location: text("location"),
+  website: text("website"),
   role: text("role").notNull().default("listener"), // "listener", "creator", "admin"
   isEmailVerified: boolean("is_email_verified").default(false),
   verificationToken: text("verification_token"),

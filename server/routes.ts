@@ -174,6 +174,56 @@ export function registerRoutes(app: Express): Server {
     res.json(video);
   });
 
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove sensitive information
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.patch("/api/users/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const currentUserId = getCurrentUserId(req);
+      
+      // Check if user is authenticated and updating their own profile
+      if (!currentUserId || currentUserId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to update this profile" });
+      }
+
+      const { displayName, bio, location, website } = req.body;
+      
+      // Validate required fields
+      if (!displayName) {
+        return res.status(400).json({ message: "Display name is required" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, {
+        displayName,
+        bio: bio || null,
+        location: location || null,
+        website: website || null,
+      });
+
+      // Remove sensitive information
+      const { password, ...safeUser } = updatedUser;
+      res.json(safeUser);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   app.get("/api/users/:id/videos", async (req, res) => {
     const videos = await storage.getUserVideos(parseInt(req.params.id));
     res.json(videos);
