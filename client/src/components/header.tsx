@@ -13,10 +13,10 @@ import { LogOut, UserCircle, Settings, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   
   const handleLogout = () => {
-    logoutMutation.mutate();
+    logout();
   };
   
   return (
