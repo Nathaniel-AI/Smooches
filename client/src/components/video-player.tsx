@@ -150,7 +150,7 @@ export function VideoPlayer({ video, autoPlay = false }: VideoPlayerProps) {
   };
 
   return (
-    <Card className="relative w-full max-w-3xl mx-auto aspect-[9/16] bg-black overflow-hidden shadow-xl">
+    <Card className="relative w-full max-w-4xl mx-auto bg-black overflow-hidden shadow-xl" style={{ aspectRatio: '16/9' }}>
       {/* Gift animation container */}
       <div id="gift-container" className="absolute inset-0 pointer-events-none z-20"></div>
       

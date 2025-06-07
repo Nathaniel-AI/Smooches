@@ -72,21 +72,21 @@ export default function HomePage() {
         <h3 className="text-xl font-bold mb-4">Trending Now</h3>
         <div className="space-y-4">
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-            <TrendingUp className="h-5 w-5 text-pink-500" />
+            <TrendingUp className="h-5 w-5 text-accent" />
             <div>
               <p className="font-medium">Dance Challenge</p>
               <p className="text-sm text-muted-foreground">12.3K participants this week</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-            <Award className="h-5 w-5 text-pink-500" />
+            <Award className="h-5 w-5 text-primary" />
             <div>
               <p className="font-medium">Creator Spotlight: DJMikeV</p>
               <p className="text-sm text-muted-foreground">Friday Night Mix at 8 PM</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-            <Users className="h-5 w-5 text-pink-500" />
+            <Users className="h-5 w-5 text-secondary" />
             <div>
               <p className="font-medium">New Creator Program</p>
               <p className="text-sm text-muted-foreground">Join now to get early access benefits</p>
