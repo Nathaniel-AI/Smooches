@@ -77,18 +77,20 @@ async function initializeMockData() {
       }
     }
 
-    // Add mock videos
+    // Add mock videos only for existing users
     for (const video of mockVideos) {
-      const existingVideos = await storage.getUserVideos(video.userId);
-      if (!existingVideos.some(v => v.title === video.title)) {
-        await storage.createVideo({
-          userId: video.userId,
-          title: video.title,
-          description: video.description,
-          videoUrl: video.videoUrl,
-          thumbnail: video.thumbnail,
-          isLive: video.isLive
-        });
+      if (createdUsers.has(video.userId)) {
+        const existingVideos = await storage.getUserVideos(video.userId);
+        if (!existingVideos.some(v => v.title === video.title)) {
+          await storage.createVideo({
+            userId: video.userId,
+            title: video.title,
+            description: video.description,
+            videoUrl: video.videoUrl,
+            thumbnail: video.thumbnail,
+            isLive: video.isLive
+          });
+        }
       }
     }
 
