@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, getCurrentUserId } from "./auth";
+import { setupSimpleAuth, requireAuth, getCurrentUserId } from "./simple-auth";
 import {
   insertUserSchema,
   insertVideoSchema,
@@ -44,7 +44,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Set up authentication (this includes all auth routes)
-  setupAuth(app);
+  setupSimpleAuth(app);
 
   // Initialize mock data when server starts
   initializeMockData().catch(console.error);
