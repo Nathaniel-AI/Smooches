@@ -58,7 +58,12 @@ export default function AuthPage() {
       {/* Left side - Auth form */}
       <div className="flex-1 flex flex-col justify-center p-10">
         <div className="max-w-md mx-auto w-full">
-          <h1 className="text-3xl font-bold mb-2">Welcome to Smooches</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="text-3xl">💋</div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              SMOOCHES
+            </h1>
+          </div>
           <p className="text-muted-foreground mb-8">
             Your platform for interactive audio streaming and content creation
           </p>

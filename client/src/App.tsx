@@ -38,39 +38,41 @@ function Navigation() {
   }
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 px-4 flex justify-around items-center z-50">
-      <Link href="/">
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <HomeIcon className="w-6 h-6" />
-          <span>For You</span>
-        </div>
-      </Link>
-      <Link href="/live">
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <Video className="w-6 h-6" />
-          <span>Live</span>
-        </div>
-      </Link>
-      <Link href="/radio">
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <RadioIcon className="w-6 h-6" />
-          <span>Radio</span>
-        </div>
-      </Link>
-      {(user.role === "creator" || user.role === "admin") && (
-        <Link href="/monetization">
-          <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-            <DollarSign className="w-6 h-6" />
-            <span>Earnings</span>
+    <nav className="fixed top-16 left-0 right-0 bg-card/95 backdrop-blur border-b border-border py-1 px-4 flex justify-center items-center z-40">
+      <div className="flex items-center space-x-8">
+        <Link href="/">
+          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <HomeIcon className="w-4 h-4" />
+            <span>For You</span>
           </div>
         </Link>
-      )}
-      <Link href={`/profile/${user.id}`}>
-        <div className="flex flex-col items-center p-2 text-sm text-muted-foreground hover:text-primary">
-          <Users className="w-6 h-6" />
-          <span>Profile</span>
-        </div>
-      </Link>
+        <Link href="/live">
+          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Video className="w-4 h-4" />
+            <span>Live</span>
+          </div>
+        </Link>
+        <Link href="/radio">
+          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <RadioIcon className="w-4 h-4" />
+            <span>Radio</span>
+          </div>
+        </Link>
+        {(user.role === "creator" || user.role === "admin") && (
+          <Link href="/monetization">
+            <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+              <DollarSign className="w-4 h-4" />
+              <span>Earnings</span>
+            </div>
+          </Link>
+        )}
+        <Link href={`/profile/${user.id}`}>
+          <div className="flex items-center space-x-1 px-2 py-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Users className="w-4 h-4" />
+            <span>Profile</span>
+          </div>
+        </Link>
+      </div>
     </nav>
   );
 }
@@ -115,7 +117,7 @@ function Router() {
   
   // If authenticated, show the full application
   return (
-    <div className="pb-20">
+    <div className="pt-24">
       <Switch>
         <ProtectedRoute path="/" component={HomePage} />
         <ProtectedRoute path="/profile/:id" component={Profile} />
