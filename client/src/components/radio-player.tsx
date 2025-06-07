@@ -171,16 +171,16 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
     let hls: Hls | null = null;
 
     try {
-      // Prioritize local audio files for guaranteed playback
-      const localAudioFiles = [
-        "/short-audio.mp3",
-        "/demo-audio.mp3",
+      // Use working external audio sources for fallback
+      const fallbackAudioFiles = [
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       ];
       
-      // Initialize with station URL if available, otherwise use local files
+      // Initialize with station URL if available, otherwise use fallback
       const initialSource = station.streamUrl && station.streamUrl.trim() 
         ? station.streamUrl 
-        : localAudioFiles[0];
+        : fallbackAudioFiles[0];
         
       // Function to destroy HLS instance if it exists
       const destroyHls = () => {
@@ -192,7 +192,6 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
       
       // Function to play direct mp3/audio files
       const setupDirectAudio = (src: string) => {
-        console.log("Setting up direct audio:", src);
         if (audioRef.current) {
           audioRef.current.src = src;
           audioRef.current.load();
@@ -201,28 +200,23 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
 
       // Function to handle fallback
       const tryFallbackSource = () => {
-        console.log("Trying fallback audio source");
         destroyHls(); // Clean up any HLS instance
         
-        // Always use a local file for fallback to ensure it works
-        setupDirectAudio(localAudioFiles[0]);
+        // Use a working external audio source
+        setupDirectAudio(fallbackAudioFiles[0]);
       };
       
       // Setup error handling for standard audio element
       const handleError = (e: Event) => {
-        console.warn("Audio playback error:", e);
         tryFallbackSource();
       };
         
       const handleCanPlay = () => {
-        console.log("Audio can play now");
         setAudioError(null);
       };
 
       // Try using HLS.js if the format appears to be HLS (.m3u8)
       if (initialSource.includes('.m3u8') && Hls.isSupported()) {
-        console.log("Using HLS.js for playback");
-        
         // Create HLS instance
         hls = new Hls({
           enableWorker: true,
@@ -235,30 +229,23 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
         
         // HLS events
         hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-          console.log("HLS media attached");
           hls?.loadSource(initialSource);
         });
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log("HLS manifest parsed");
           setAudioError(null);
         });
         
         hls.on(Hls.Events.ERROR, (_, data) => {
-          console.error("HLS error:", data);
-          
           if (data.fatal) {
             switch(data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.error("HLS network error - trying to recover");
                 hls?.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.error("HLS media error - trying to recover");
                 hls?.recoverMediaError();
                 break;
               default:
-                console.error("Fatal HLS error - falling back to direct audio");
                 tryFallbackSource();
                 break;
             }
@@ -266,7 +253,6 @@ export function RadioPlayer({ station }: RadioPlayerProps) {
         });
       } else {
         // Use standard audio element for MP3s and other formats
-        console.log("Using standard audio playback");
         setupDirectAudio(initialSource);
         
         // Add event listeners for standard audio element

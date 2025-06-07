@@ -34,11 +34,16 @@ export default function Profile() {
                     <Skeleton key={i} className="aspect-[9/16]" />
                   ))}
                 </div>
-              ) : (
+              ) : videos && videos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4">
-                  {videos?.map((video) => (
+                  {videos.map((video) => (
                     <VideoPlayer key={video.id} video={video} />
                   ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-lg">No videos uploaded yet</p>
+                  <p className="text-sm mt-2">Start creating content to share with your audience!</p>
                 </div>
               )}
             </ScrollArea>

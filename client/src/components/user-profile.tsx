@@ -18,7 +18,19 @@ export function UserProfile({ userId, detailed = false }: UserProfileProps) {
     return <Skeleton className="w-full h-12" />;
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="flex items-center gap-4 p-4">
+        <Avatar className="w-12 h-12 border border-border">
+          <AvatarFallback>U</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <h3 className="font-semibold text-white">User Not Found</h3>
+          <p className="text-sm text-gray-300">@unknown</p>
+        </div>
+      </div>
+    );
+  }
 
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
